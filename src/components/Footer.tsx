@@ -38,11 +38,13 @@ export default function Footer() {
     ];
 
     const companyLinks = [
-        { name: 'About Us', href: '/about', description: 'Learn about our mission' },
-        { name: 'Privacy Policy', href: '/privacy', description: 'How we protect your data' },
-        { name: 'Terms of Service', href: '/terms', description: 'Terms and conditions' },
-        { name: 'Contact Us', href: '/contact', description: 'Get in touch' },
-    ];
+    { name: 'About Us', href: '/about', description: 'Learn about our mission' },
+    { name: 'Privacy Policy', href: '/privacy', description: 'How we protect your data' },
+    { name: 'Terms of Service', href: '/terms', description: 'Terms and conditions' },
+    { name: 'Cookie Policy', href: '/cookie-policy', description: 'Our cookie usage' },
+    { name: 'Disclaimer', href: '/disclaimer', description: 'Legal disclaimer' },
+    { name: 'Contact Us', href: '/contact', description: 'Get in touch' },
+];
 
     const socialLinks = [
         { icon: Github, href: '#', label: 'Follow ResizeMe on GitHub', name: 'GitHub' },

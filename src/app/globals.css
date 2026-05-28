@@ -149,5 +149,5 @@
   ::selection { @apply bg-purple-200 dark:bg-purple-900/50 text-gray-900 dark:text-gray-100; }
 
   /* Focus */
-  *:focus-visible { @apply outline-2 outline-primary outline-offset-2; }
+  *:focus-visible { @apply outline-none ring-2 ring-primary ring-offset-2; }
 }

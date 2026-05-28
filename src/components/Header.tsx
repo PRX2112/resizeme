@@ -45,15 +45,22 @@ export default function Header() {
         { label: 'Crop JPG', href: '/tools/crop/jpg', description: 'JPG specific cropping' },
     ];
 
-    const moreTools = [
-        { label: 'Watermark', href: '/tools/watermark', description: 'Add text/image watermark' },
-        { label: 'Background Remover', href: '/tools/background-remover', description: 'AI background removal' },
-        { label: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes' },
-        { label: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors' },
-        { label: 'Rotate Image', href: '/rotate-image', description: 'Rotate images' },
-        { label: 'Flip Image', href: '/flip-image', description: 'Flip horizontally/vertically' },
-        { label: 'Image Enlarger', href: '/tools/enlarge', description: 'Upscale images' },
+    const trustLinks = [
+        { label: 'About', href: '/about' },
+        { label: 'Privacy', href: '/privacy' },
+        { label: 'Terms', href: '/terms' },
+        { label: 'Contact', href: '/contact' },
+        { label: 'Cookie Policy', href: '/cookie-policy' },
+        { label: 'Disclaimer', href: '/disclaimer' },
     ];
+        const moreTools = [
+    { label: 'Watermark', href: '/tools/watermark', description: 'Add text/image watermark' },
+    { label: 'Background Remover', href: '/tools/background-remover', description: 'AI background removal' },
+    { label: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes' },
+    { label: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors' },
+    { label: 'Flip Image', href: '/flip-image', description: 'Flip horizontally/vertically' },
+    { label: 'Image Enlarger', href: '/tools/enlarge', description: 'Upscale images' },
+];
 
     const toggleMobileCategory = (category: string) => {
         setExpandedMobileCategory(expandedMobileCategory === category ? null : category);
@@ -106,6 +113,7 @@ export default function Header() {
                         <DropdownMenu label="Compress" items={compressTools} />
                         <DropdownMenu label="Convert" items={convertTools} />
                         <DropdownMenu label="More" items={moreTools} />
+                        <Link href="/blog" className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Blog</Link>
                     </div>
 
                     {/* Right side: Theme Toggle */}

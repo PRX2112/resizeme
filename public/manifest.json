@@ -1,0 +1,23 @@
+{
+  "name": "ResizeMe - Private Image Toolkit",
+  "short_name": "ResizeMe",
+  "description": "Private browser-based image tools. Resize, crop, compress, and convert photos instantly on your device.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

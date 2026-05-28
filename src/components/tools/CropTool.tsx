@@ -14,6 +14,8 @@ import {
     Square,
     Maximize,
     Loader2,
+    X,
+    Plus,
 } from 'lucide-react';
 
 const ASPECT_RATIOS = [
@@ -75,6 +77,76 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
     const imgRef = useRef<HTMLImageElement>(null);
     const [processedImageBlob, setProcessedImageBlob] = useState<Blob | null>(null);
     const [processedFileName, setProcessedFileName] = useState<string>('');
+
+    // Custom Saved Aspect Ratios State
+    const [customAspects, setCustomAspects] = useState<{ name: string; value: number }[]>([]);
+    const [newAspectName, setNewAspectName] = useState('');
+    const [newAspectW, setNewAspectW] = useState<number>(0);
+    const [newAspectH, setNewAspectH] = useState<number>(0);
+
+    // Load local custom aspect presets and favorite formats
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('resizeme_custom_aspects');
+            if (stored) {
+                setCustomAspects(JSON.parse(stored));
+            }
+            const favFormat = localStorage.getItem('resizeme_fav_format');
+            if (favFormat) {
+                setFormat(favFormat);
+            }
+        } catch (e) {
+            console.error('Failed to load local crop settings:', e);
+        }
+    }, []);
+
+    const saveCustomAspect = () => {
+        if (!newAspectName.trim() || !newAspectW || !newAspectH) return;
+        const newRatio = {
+            name: `${newAspectName.trim()} (${newAspectW}:${newAspectH})`,
+            value: newAspectW / newAspectH
+        };
+        const updated = [...customAspects, newRatio];
+        setCustomAspects(updated);
+        localStorage.setItem('resizeme_custom_aspects', JSON.stringify(updated));
+        setNewAspectName('');
+        setNewAspectW(0);
+        setNewAspectH(0);
+    };
+
+    const deleteCustomAspect = (index: number) => {
+        const updated = customAspects.filter((_, i) => i !== index);
+        setCustomAspects(updated);
+        localStorage.setItem('resizeme_custom_aspects', JSON.stringify(updated));
+    };
+
+    const handleFormatChange = (fmt: string) => {
+        setFormat(fmt);
+        localStorage.setItem('resizeme_fav_format', fmt);
+    };
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleReset();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (!isProcessing && completedCrop && imgRef.current) {
+                    handleDownload();
+                }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                e.preventDefault();
+                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                if (fileInput) {
+                    fileInput.click();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [completedCrop, isProcessing, originalFile]);
 
     // Usage tracking
     const { usage, limits, canDownload, canProcessFile, trackDownload } = useUsageTracking();
@@ -296,6 +368,77 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
                                         </button>
                                     ))}
                                 </div>
+
+                                {/* Custom Aspect Ratios List */}
+                                {customAspects.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                        <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                                            Custom Aspect Ratios
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {customAspects.map((ratio, index) => (
+                                                <div 
+                                                    key={index}
+                                                    className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800/50"
+                                                >
+                                                    <button
+                                                        onClick={() => handleAspectRatioChange(ratio.value)}
+                                                        className={`flex-1 text-left text-xs font-semibold ${aspect === ratio.value ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}
+                                                    >
+                                                        ★ {ratio.name}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteCustomAspect(index)}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                        aria-label="Delete aspect preset"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Add Custom Aspect Form */}
+                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+                                    <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                                        Add Custom Aspect
+                                    </h4>
+                                    <input
+                                        type="text"
+                                        placeholder="Name (e.g. Card)"
+                                        value={newAspectName}
+                                        onChange={(e) => setNewAspectName(e.target.value)}
+                                        className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                    />
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="number"
+                                            placeholder="W (e.g. 4)"
+                                            value={newAspectW || ''}
+                                            onChange={(e) => setNewAspectW(Number(e.target.value))}
+                                            className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                            min="1"
+                                        />
+                                        <span className="text-gray-400 text-xs">:</span>
+                                        <input
+                                            type="number"
+                                            placeholder="H (e.g. 3)"
+                                            value={newAspectH || ''}
+                                            onChange={(e) => setNewAspectH(Number(e.target.value))}
+                                            className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                            min="1"
+                                        />
+                                        <button
+                                            onClick={saveCustomAspect}
+                                            disabled={!newAspectName.trim() || !newAspectW || !newAspectH}
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Format */}
@@ -307,7 +450,7 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
                                     {FORMATS.map((fmt) => (
                                         <button
                                             key={fmt.value}
-                                            onClick={() => setFormat(fmt.value)}
+                                            onClick={() => handleFormatChange(fmt.value)}
                                             className={`py-2 px-4 rounded-lg font-medium transition-all ${format === fmt.value
                                                 ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
                                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'

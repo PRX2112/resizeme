@@ -14,6 +14,7 @@ import {
     Twitter,
     Smartphone,
     Monitor,
+    X,
 } from 'lucide-react';
 import { formatFileSize, calculatePercentageSize, fileToBase64, downloadFile } from '@/utils/imageUtils';
 
@@ -76,7 +77,49 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
     const [startTime, setStartTime] = useState<number>(0);
     const [showRecommendations, setShowRecommendations] = useState(false);
 
+    // Custom Presets State
+    const [customPresets, setCustomPresets] = useState<{ name: string; width: number; height: number }[]>([]);
+    const [newPresetName, setNewPresetName] = useState('');
 
+    // Load custom presets and favorite format
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('resizeme_custom_presets');
+            if (stored) {
+                setCustomPresets(JSON.parse(stored));
+            }
+            const favFormat = localStorage.getItem('resizeme_fav_format');
+            if (favFormat) {
+                setFormat(favFormat);
+            }
+        } catch (e) {
+            console.error('Failed to load local settings:', e);
+        }
+    }, []);
+
+    const saveCustomPreset = () => {
+        if (!newPresetName.trim() || !width || !height) return;
+        const newPreset = {
+            name: newPresetName.trim(),
+            width,
+            height
+        };
+        const updated = [...customPresets, newPreset];
+        setCustomPresets(updated);
+        localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
+        setNewPresetName('');
+    };
+
+    const deleteCustomPreset = (index: number) => {
+        const updated = customPresets.filter((_, i) => i !== index);
+        setCustomPresets(updated);
+        localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
+    };
+
+    const handleFormatChange = (fmt: string) => {
+        setFormat(fmt);
+        localStorage.setItem('resizeme_fav_format', fmt);
+    };
 
     // Usage tracking
     const { usage, limits, canDownload, canProcessFile, trackDownload, showUpgradePrompt } = useUsageTracking();
@@ -89,10 +132,28 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
         }
     }, [originalImage]);
 
-    // Update format if defaultFormat changes
+    // Keyboard Shortcuts
     useEffect(() => {
-        setFormat(defaultFormat);
-    }, [defaultFormat]);
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleReset();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (!isProcessing && !isServerProcessing && width && height) {
+                    handleDownload();
+                }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                e.preventDefault();
+                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                if (fileInput) {
+                    fileInput.click();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [width, height, isProcessing, isServerProcessing, originalFile]);
 
     const handleFileSelect = async (file: File) => {
         // No limit
@@ -348,6 +409,47 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
                                         </button>
                                     ))}
                                 </div>
+
+                                {/* Custom Presets Block */}
+                                {customPresets.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 animate-fade-in">
+                                        <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
+                                            Your Custom Presets
+                                        </h4>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            {customPresets.map((preset, index) => (
+                                                <div 
+                                                    key={index}
+                                                    className="flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary transition-all duration-200 group relative bg-gray-50/50 dark:bg-gray-900/20"
+                                                >
+                                                    <button
+                                                        onClick={() => handlePresetClick(preset.width, preset.height)}
+                                                        className="flex items-center gap-3 text-left flex-1 min-w-0"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                                            ★
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                                                {preset.name}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {preset.width} × {preset.height}px
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteCustomPreset(index)}
+                                                        className="p-1 hover:bg-red-50 dark:hover:bg-red-950/20 rounded text-gray-400 hover:text-red-500 transition-colors ml-2 flex-shrink-0"
+                                                        aria-label="Delete preset"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -424,6 +526,29 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
                                             min="1"
                                         />
                                     </div>
+
+                                    {/* Save Preset */}
+                                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+                                        <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-2">
+                                            Save current dimensions
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Preset name (e.g. Banner)"
+                                                value={newPresetName}
+                                                onChange={(e) => setNewPresetName(e.target.value)}
+                                                className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                            />
+                                            <button
+                                                onClick={saveCustomPreset}
+                                                disabled={!newPresetName.trim() || !width || !height}
+                                                className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -436,7 +561,7 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
                                     {FORMATS.map((fmt) => (
                                         <button
                                             key={fmt.value}
-                                            onClick={() => setFormat(fmt.value)}
+                                            onClick={() => handleFormatChange(fmt.value)}
                                             className={`py-2 px-4 rounded-lg font-medium transition-all ${format === fmt.value
                                                 ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
                                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'

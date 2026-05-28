@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import InteractiveDotsBackground from "@/components/ui/InteractiveDotsBackground";
 import { ENABLE_INTERACTIVE_BACKGROUND } from "@/config/ui";
@@ -17,11 +18,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL || 'https://resizeme.in'),
   title: {
-    default: "ResizeMe - Free Online Image Tools",
-    template: "%s "
+    default: "ResizeMe - Private Image Tools That Run On Your Device",
+    template: "%s | ResizeMe"
   },
-  description: "Professional image tools for resizing, cropping, compressing, and converting. Fast, secure, and privacy-focused. All processing happens in your browser/server.",
-  keywords: ["image resizer", "photo editor", "online image tools", "compress image", "crop image", "convert image format", "free online tools"],
+  description: "Private browser-based image tools. Resize, crop, compress, and convert PNG, JPG, and WebP images instantly on your local device. No uploads required, 100% private.",
+  keywords: ["private image resizer", "no upload image compressor", "local image converter", "browser-based image toolkit", "privacy-first image tools", "secure batch resize"],
   authors: [{ name: "ResizeMe Team" }],
   creator: "ResizeMe",
   publisher: "ResizeMe",
@@ -111,6 +112,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <Header />
+          <PWAInstallBanner />
           {ENABLE_INTERACTIVE_BACKGROUND && <InteractiveDotsBackground />}
           <main className="min-h-screen relative z-10">
             {children}
