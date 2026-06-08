@@ -42,23 +42,22 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://resizeme.in',
     siteName: 'ResizeMe',
-    title: 'ResizeMe - All-in-One Image Toolkit',
-    description: 'Resize, crop, compress, and convert images instantly. Free, secure, and high-quality.',
+    title: 'ResizeMe - Private Image Tools That Run On Your Device',
+    description: 'Resize, crop, compress, and convert images instantly with private browser-based tools.',
     images: [
       {
-        url: '/og-image.jpg', // We need to create this later
-        width: 1200,
-        height: 630,
+        url: '/logo.png',
+        width: 512,
+        height: 512,
         alt: 'ResizeMe Preview',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ResizeMe - All-in-One Image Toolkit',
+    title: 'ResizeMe - Private Image Tools That Run On Your Device',
     description: 'Resize, crop, compress, and convert images instantly.',
-    creator: '@resizeme',
-    images: ['/og-image.jpg'],
+    images: ['/logo.png'],
   },
   icons: {
     icon: [
@@ -75,9 +74,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  verification: {
-    google: "google-site-verification=VerificationCodeHere", // Replace with your actual code
-  }
 };
 
 export default function RootLayout({
@@ -85,6 +81,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const adsEnabled =
+    process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' &&
+    Boolean(process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID);
+  const footerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_FOOTER_SLOT;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -100,8 +101,22 @@ export default function RootLayout({
             }),
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "ResizeMe",
+              url: "https://resizeme.in",
+              description:
+                "Private browser-based image tools for resizing, cropping, compressing, and converting images.",
+              inLanguage: "en",
+            }),
+          }}
+        />
         {/* Google AdSense */}
-        {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' && (
+        {adsEnabled && (
           <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID}`}
@@ -118,11 +133,12 @@ export default function RootLayout({
             {children}
           </main>
 
-          {/* Global Footer Ad Unit */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full border-t border-gray-100 dark:border-gray-800/50 mt-12 bg-gray-50/50 dark:bg-gray-900/20">
-            <div className="text-center text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">Advertisement</div>
-            <AdBanner dataAdSlot="INSERT_YOUR_SLOT_ID_HERE" dataAdFormat="horizontal" />
-          </div>
+          {adsEnabled && footerAdSlot && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full border-t border-gray-100 dark:border-gray-800/50 mt-12 bg-gray-50/50 dark:bg-gray-900/20">
+              <div className="text-center text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">Advertisement</div>
+              <AdBanner dataAdSlot={footerAdSlot} dataAdFormat="horizontal" />
+            </div>
+          )}
 
           <Footer />
         </ThemeProvider>

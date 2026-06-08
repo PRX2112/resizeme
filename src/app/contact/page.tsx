@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Loader2, MessageSquare, Clock } from 'lucide-react';
+import { Mail, Send, MessageSquare, Clock } from 'lucide-react';
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({
@@ -10,8 +10,7 @@ export default function ContactPage() {
         subject: '',
         message: '',
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [submitStatus, setSubmitStatus] = useState<'idle' | 'ready'>('idle');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({
@@ -20,29 +19,15 @@ export default function ContactPage() {
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        setSubmitStatus('idle');
+        const subject = encodeURIComponent(`[ResizeMe] ${formData.subject}`);
+        const body = encodeURIComponent(
+            `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
+        );
 
-        try {
-            // Simulate API call - replace with actual endpoint
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // TODO: Implement actual contact form submission
-            // const response = await fetch('/api/contact', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(formData),
-            // });
-
-            setSubmitStatus('success');
-            setFormData({ name: '', email: '', subject: '', message: '' });
-        } catch (error) {
-            setSubmitStatus('error');
-        } finally {
-            setIsSubmitting(false);
-        }
+        window.location.href = `mailto:handleresizeme@gmail.com?subject=${subject}&body=${body}`;
+        setSubmitStatus('ready');
     };
 
     return (
@@ -224,18 +209,10 @@ export default function ContactPage() {
                                 </div>
 
                                 {/* Submit Status Messages */}
-                                {submitStatus === 'success' && (
+                                {submitStatus === 'ready' && (
                                     <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                                         <p className="text-green-800 dark:text-green-400 text-sm">
-                                            ✓ Thank you for your message! We'll get back to you soon.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {submitStatus === 'error' && (
-                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                                        <p className="text-red-800 dark:text-red-400 text-sm">
-                                            ✗ Something went wrong. Please try again or email us directly.
+                                            Your email app should open with the message filled in. If it does not, email us directly at handleresizeme@gmail.com.
                                         </p>
                                     </div>
                                 )}
@@ -243,20 +220,10 @@ export default function ContactPage() {
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2"
                                 >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Sending...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send className="w-5 h-5" />
-                                            Send Message
-                                        </>
-                                    )}
+                                    <Send className="w-5 h-5" />
+                                    Open Email
                                 </button>
 
                                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center">

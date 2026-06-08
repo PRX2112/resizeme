@@ -2,12 +2,13 @@
 module.exports = {
     siteUrl: process.env.SITE_URL || 'https://resizeme.in',
     generateRobotsTxt: true,
-    exclude: ['/terms', '/privacy'],
+    exclude: ['/debug', '/debug/*'],
     robotsTxtOptions: {
         policies: [
             {
                 userAgent: '*',
                 allow: '/',
+                disallow: ['/debug', '/debug/*'],
             },
         ],
     },

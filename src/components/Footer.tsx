@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Twitter, Mail, Heart, Image as ImageIcon } from 'lucide-react';
+import { Mail, Heart } from 'lucide-react';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -19,8 +19,8 @@ export default function Footer() {
         {
             title: 'Advanced Tools',
             links: [
-                { name: 'Rotate Image', href: '/rotate-image', description: 'Rotate photos online' },
-                { name: 'Flip Image', href: '/flip-image', description: 'Flip images horizontally or vertically' },
+                { name: 'Rotate Image', href: '/tools/rotate', description: 'Rotate photos online' },
+                { name: 'Flip Image', href: '/tools/flip', description: 'Flip images horizontally or vertically' },
                 { name: 'Enlarge Image', href: '/tools/enlarge', description: 'Upscale image quality' },
                 { name: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes online' },
                 { name: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors from images' },
@@ -46,25 +46,15 @@ export default function Footer() {
     { name: 'Contact Us', href: '/contact', description: 'Get in touch' },
 ];
 
-    const socialLinks = [
-        { icon: Github, href: '#', label: 'Follow ResizeMe on GitHub', name: 'GitHub' },
-        { icon: Twitter, href: '#', label: 'Follow ResizeMe on Twitter', name: 'Twitter' },
-        { icon: Mail, href: 'mailto:handleresizeme@gmail.com', label: 'Email ResizeMe Support', name: 'Email' },
-    ];
-
     // Schema.org structured data for SEO
     const organizationSchema = {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "ResizeMe",
         "url": "https://resizeme.in",
-        "logo": "https://resizeme.in/icon.png",
+        "logo": "https://resizeme.in/logo.png",
         "description": "Professional online image editing tools. Resize, crop, compress, and convert images for free in your browser with complete privacy.",
         "email": "handleresizeme@gmail.com",
-        "sameAs": [
-            "https://github.com/resizeme",
-            "https://twitter.com/resizeme"
-        ],
         "contactPoint": {
             "@type": "ContactPoint",
             "email": "handleresizeme@gmail.com",
@@ -97,6 +87,13 @@ export default function Footer() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
                                 Professional online image editing tools. Resize, crop, compress, and convert images for free in your browser with complete privacy.
                             </p>
+                            <a
+                                href="mailto:handleresizeme@gmail.com"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                                <Mail className="w-4 h-4" />
+                                handleresizeme@gmail.com
+                            </a>
 
 
                             {/* Trust Badges */}

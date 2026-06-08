@@ -45,20 +45,12 @@ export default function Header() {
         { label: 'Crop JPG', href: '/tools/crop/jpg', description: 'JPG specific cropping' },
     ];
 
-    const trustLinks = [
-        { label: 'About', href: '/about' },
-        { label: 'Privacy', href: '/privacy' },
-        { label: 'Terms', href: '/terms' },
-        { label: 'Contact', href: '/contact' },
-        { label: 'Cookie Policy', href: '/cookie-policy' },
-        { label: 'Disclaimer', href: '/disclaimer' },
-    ];
         const moreTools = [
     { label: 'Watermark', href: '/tools/watermark', description: 'Add text/image watermark' },
     { label: 'Background Remover', href: '/tools/background-remover', description: 'AI background removal' },
     { label: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes' },
     { label: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors' },
-    { label: 'Flip Image', href: '/flip-image', description: 'Flip horizontally/vertically' },
+    { label: 'Flip Image', href: '/tools/flip', description: 'Flip horizontally/vertically' },
     { label: 'Image Enlarger', href: '/tools/enlarge', description: 'Upscale images' },
 ];
 
