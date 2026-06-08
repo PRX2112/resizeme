@@ -1,6 +1,8 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /debug
+Disallow: /debug/*
 
 # Host
 Host: https://resizeme.in

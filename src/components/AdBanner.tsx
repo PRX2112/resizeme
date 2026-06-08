@@ -20,7 +20,13 @@ export default function AdBanner({
 
     useEffect(() => {
         // Only initialize the ad once, and ensure we're in the browser
-        if (typeof window !== 'undefined' && !hasInitialized.current && adRef.current) {
+        if (
+            typeof window !== 'undefined' &&
+            process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' &&
+            process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID &&
+            !hasInitialized.current &&
+            adRef.current
+        ) {
             try {
                 // @ts-ignore - The adsbygoogle array is injected globally by the AdSense script
                 (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -31,23 +37,11 @@ export default function AdBanner({
         }
     }, []);
 
-    // In development mode, show a placeholder block so you can visualize where ads will appear
-    if (process.env.NODE_ENV === 'development') {
-        return (
-            <div className={`w-full bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex items-center justify-center p-4 min-h-[100px] ${className}`}>
-                <p className="text-sm text-gray-500 font-medium">
-                    AdSense Placement Placeholder<br/>
-                    <span className="text-xs font-normal">Slot: {dataAdSlot}</span>
-                </p>
-            </div>
-        );
-    }
-
     const PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
     const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true';
 
-    // Don't render anything in production if ads are disabled or no ID is provided
-    if (!PUBLISHER_ID || !ADS_ENABLED) {
+    // Do not expose empty or placeholder ad slots during site review.
+    if (!PUBLISHER_ID || !ADS_ENABLED || !dataAdSlot || dataAdSlot.includes('INSERT_')) {
         return null;
     }
 

@@ -20,6 +20,10 @@ const redirectMap: Record<string, string> = {
 export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
+    if (pathname === '/debug' || pathname.startsWith('/debug/')) {
+        return NextResponse.rewrite(new URL('/not-found', request.url), { status: 404 });
+    }
+
     // Check for redirect mappings
     if (redirectMap[pathname]) {
         const redirectUrl = new URL(redirectMap[pathname], request.url);
