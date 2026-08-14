@@ -473,7 +473,7 @@ export default function Home() {
       <TrustAndArchitecture />
 
       {/* ─── FAQ ─── */}
-      <section className="py-20 bg-gray-50/50 dark:bg-gray-900/30 relative z-10 border-t border-gray-100 dark:border-gray-900">
+      <section id="faq" className="py-20 bg-gray-50/50 dark:bg-gray-900/30 relative z-10 border-t border-gray-100 dark:border-gray-900 scroll-mt-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>

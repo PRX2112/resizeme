@@ -1,10 +1,21 @@
 import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import * as schema from './schema';
 
-if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is not set');
+const connectionString = process.env.DATABASE_URL;
+
+function createDbClient() {
+    if (!connectionString) {
+        if (process.env.NODE_ENV === 'production') {
+            console.warn('[DB] Warning: DATABASE_URL environment variable is not set.');
+        }
+        return null;
+    }
+
+    // neon(connectionString) uses stateless HTTP connection pooling
+    const sql = neon(connectionString);
+    return drizzle(sql, { schema });
 }
 
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+export const db = createDbClient();
+

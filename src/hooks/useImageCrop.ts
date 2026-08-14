@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { validateImageFile, loadImage, fileToBase64, downloadFile } from '@/utils/imageUtils';
+import { validateImageFile, loadImage, downloadFile } from '@/utils/imageUtils';
+import { prepareImageForServer } from '@/utils/clientImagePreprocess';
 
 export interface CropArea {
     x: number;
@@ -58,7 +59,7 @@ export function useImageCrop() {
         setError(null);
 
         try {
-            const base64 = await fileToBase64(originalFile);
+            const { base64 } = await prepareImageForServer(originalFile);
 
             const response = await fetch('/api/crop', {
                 method: 'POST',

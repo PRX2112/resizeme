@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { validateImageFile, fileToBase64, downloadFile } from '@/utils/imageUtils';
+import { validateImageFile, downloadFile } from '@/utils/imageUtils';
+import { prepareImageForServer } from '@/utils/clientImagePreprocess';
 
 export interface EnlargeResult {
     image: string; // base64
@@ -46,7 +47,7 @@ export function useImageEnlarge() {
         setError(null);
 
         try {
-            const base64 = await fileToBase64(originalFile);
+            const { base64 } = await prepareImageForServer(originalFile);
 
             const response = await fetch('/api/enlarge', {
                 method: 'POST',

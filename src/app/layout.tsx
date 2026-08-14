@@ -81,10 +81,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+  const footerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_FOOTER_SLOT;
   const adsEnabled =
     process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' &&
-    Boolean(process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID);
-  const footerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_FOOTER_SLOT;
+    Boolean(publisherId) &&
+    !publisherId?.includes('XXXX') &&
+    !publisherId?.includes('INSERT_');
+  const hasValidFooterSlot =
+    Boolean(footerAdSlot) &&
+    !footerAdSlot?.includes('XXXX') &&
+    !footerAdSlot?.includes('INSERT_');
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -119,7 +126,7 @@ export default function RootLayout({
         {adsEnabled && (
           <script
             async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID}`}
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
             crossOrigin="anonymous"
           />
         )}
@@ -133,7 +140,7 @@ export default function RootLayout({
             {children}
           </main>
 
-          {adsEnabled && footerAdSlot && (
+          {adsEnabled && hasValidFooterSlot && footerAdSlot && (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full border-t border-gray-100 dark:border-gray-800/50 mt-12 bg-gray-50/50 dark:bg-gray-900/20">
               <div className="text-center text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">Advertisement</div>
               <AdBanner dataAdSlot={footerAdSlot} dataAdFormat="horizontal" />

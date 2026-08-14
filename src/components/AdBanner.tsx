@@ -18,12 +18,25 @@ export default function AdBanner({
     const adRef = useRef<HTMLModElement>(null);
     const hasInitialized = useRef(false);
 
+    const PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+    const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true';
+
+    // Comprehensive guard: Never render empty container boxes, placeholders, or broken borders
+    // while AdSense is disabled, pending approval, or using placeholder keys.
+    const isInvalid =
+        !PUBLISHER_ID ||
+        !ADS_ENABLED ||
+        !dataAdSlot ||
+        PUBLISHER_ID.includes('XXXX') ||
+        PUBLISHER_ID.includes('INSERT_') ||
+        dataAdSlot.includes('XXXX') ||
+        dataAdSlot.includes('INSERT_');
+
     useEffect(() => {
-        // Only initialize the ad once, and ensure we're in the browser
+        // Only initialize the ad once, and ensure we're in the browser with valid credentials
         if (
             typeof window !== 'undefined' &&
-            process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' &&
-            process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID &&
+            !isInvalid &&
             !hasInitialized.current &&
             adRef.current
         ) {
@@ -32,16 +45,12 @@ export default function AdBanner({
                 (window.adsbygoogle = window.adsbygoogle || []).push({});
                 hasInitialized.current = true;
             } catch (error) {
-                console.error('AdSense initialization failed:', error);
+                console.error('AdSense initialization error:', error);
             }
         }
-    }, []);
+    }, [isInvalid]);
 
-    const PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-    const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true';
-
-    // Do not expose empty or placeholder ad slots during site review.
-    if (!PUBLISHER_ID || !ADS_ENABLED || !dataAdSlot || dataAdSlot.includes('INSERT_')) {
+    if (isInvalid) {
         return null;
     }
 
@@ -50,7 +59,7 @@ export default function AdBanner({
             <ins
                 ref={adRef}
                 className="adsbygoogle"
-                style={{ display: 'block', minWidth: '250px', width: '100%' }}
+                style={{ display: 'block', width: '100%' }}
                 data-ad-client={PUBLISHER_ID}
                 data-ad-slot={dataAdSlot}
                 data-ad-format={dataAdFormat}

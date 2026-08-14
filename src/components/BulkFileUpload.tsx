@@ -12,7 +12,7 @@ interface BulkFileUploadProps {
 
 export default function BulkFileUpload({
     onFilesSelect,
-    accept = 'image/*',
+    accept = 'image/*,.heic,.heif',
     maxSizeMB = Infinity,
     maxFiles = 10,
 }: BulkFileUploadProps) {
@@ -30,17 +30,19 @@ export default function BulkFileUpload({
         }
 
         for (const file of fileList) {
+            const fileNameLower = file.name.toLowerCase();
+            const isHeic = fileNameLower.endsWith('.heic') || fileNameLower.endsWith('.heif');
+
             // Check file type
-            if (!file.type.startsWith('image/')) {
+            if (!file.type.startsWith('image/') && !isHeic) {
                 continue; // Skip non-image files
             }
 
-            // Removed artificial file size limit check
             validFiles.push(file);
         }
 
         if (validFiles.length === 0 && fileList.length > 0) {
-            setError('No valid image files found inside limits.');
+            setError('No valid image files found.');
         }
 
         return validFiles;

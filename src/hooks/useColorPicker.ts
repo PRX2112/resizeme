@@ -5,8 +5,9 @@ export interface ColorInfo {
     hex: string;
     rgb: { r: number; g: number; b: number };
     hsl: { h: number; s: number; l: number };
-    x: number;
-    y: number;
+    cmyk: { c: number; m: number; y: number; k: number };
+    x?: number;
+    y?: number;
 }
 
 export function useColorPicker() {
@@ -17,9 +18,17 @@ export function useColorPicker() {
     const [colorHistory, setColorHistory] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isEyeDropperActive, setIsEyeDropperActive] = useState(true);
+    const [hasNativeEyeDropper, setHasNativeEyeDropper] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+
+    // Detect native EyeDropper API support
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'EyeDropper' in window) {
+            setHasNativeEyeDropper(true);
+        }
+    }, []);
 
     // Helper: RGB to HEX
     const rgbToHex = (r: number, g: number, b: number) => {
@@ -53,10 +62,37 @@ export function useColorPicker() {
         };
     };
 
+    // Helper: RGB to CMYK
+    const rgbToCmyk = (r: number, g: number, b: number) => {
+        const cPrime = 1 - (r / 255);
+        const mPrime = 1 - (g / 255);
+        const yPrime = 1 - (b / 255);
+        const k = Math.min(cPrime, Math.min(mPrime, yPrime));
+        if (k === 1) return { c: 0, m: 0, y: 0, k: 100 };
+        const c = Math.round(((cPrime - k) / (1 - k)) * 100);
+        const m = Math.round(((mPrime - k) / (1 - k)) * 100);
+        const y = Math.round(((yPrime - k) / (1 - k)) * 100);
+        return { c, m, y, k: Math.round(k * 100) };
+    };
+
+    // Helper: HEX to RGB
+    const hexToRgb = (hex: string) => {
+        let cleanHex = hex.replace('#', '');
+        if (cleanHex.length === 3) {
+            cleanHex = cleanHex.split('').map(c => c + c).join('');
+        }
+        const num = parseInt(cleanHex, 16);
+        return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255
+        };
+    };
+
     const loadFile = useCallback(async (file: File) => {
         try {
             setError(null);
-            const validation = validateImageFile(file);
+            const validation = validateImageFile(file, 20);
             if (!validation.valid) {
                 setError(validation.error || 'Invalid file');
                 return;
@@ -91,7 +127,6 @@ export function useColorPicker() {
     const pickColor = useCallback((x: number, y: number, isClick: boolean = false) => {
         if (!contextRef.current || !image) return;
 
-        // Ensure bounds
         const imgX = Math.max(0, Math.min(Math.floor(x), image.width - 1));
         const imgY = Math.max(0, Math.min(Math.floor(y), image.height - 1));
 
@@ -100,11 +135,13 @@ export function useColorPicker() {
 
         const hex = rgbToHex(r, g, b);
         const hsl = rgbToHsl(r, g, b);
+        const cmyk = rgbToCmyk(r, g, b);
 
         const colorInfo: ColorInfo = {
             hex,
             rgb: { r, g, b },
             hsl,
+            cmyk,
             x: imgX,
             y: imgY
         };
@@ -112,14 +149,53 @@ export function useColorPicker() {
         if (isClick) {
             setSelectedColor(colorInfo);
             setColorHistory(prev => {
-                // Add unique to history, max 10
-                const newHistory = [hex, ...prev.filter(c => c !== hex)].slice(0, 10);
+                const newHistory = [hex, ...prev.filter(c => c.toLowerCase() !== hex.toLowerCase())].slice(0, 12);
                 return newHistory;
             });
         } else {
             setHoverColor(colorInfo);
         }
     }, [image]);
+
+    const pickColorFromHex = useCallback((hex: string) => {
+        try {
+            const rgb = hexToRgb(hex);
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+            const formattedHex = hex.startsWith('#') ? hex : `#${hex}`;
+
+            const colorInfo: ColorInfo = {
+                hex: formattedHex,
+                rgb,
+                hsl,
+                cmyk
+            };
+
+            setSelectedColor(colorInfo);
+            setColorHistory(prev => {
+                const newHistory = [formattedHex, ...prev.filter(c => c.toLowerCase() !== formattedHex.toLowerCase())].slice(0, 12);
+                return newHistory;
+            });
+        } catch (e) {
+            console.error('Invalid hex format:', e);
+        }
+    }, []);
+
+    // Native EyeDropper API trigger
+    const openNativeEyeDropper = useCallback(async () => {
+        if (typeof window !== 'undefined' && 'EyeDropper' in window) {
+            try {
+                const EyeDropperClass = (window as any).EyeDropper;
+                const eyeDropper = new EyeDropperClass();
+                const result = await eyeDropper.open();
+                if (result?.sRGBHex) {
+                    pickColorFromHex(result.sRGBHex);
+                }
+            } catch (err) {
+                // User aborted selection
+            }
+        }
+    }, [pickColorFromHex]);
 
     const reset = useCallback(() => {
         setImage(null);
@@ -138,9 +214,13 @@ export function useColorPicker() {
         colorHistory,
         isEyeDropperActive,
         setIsEyeDropperActive,
+        hasNativeEyeDropper,
+        openNativeEyeDropper,
         error,
         loadFile,
         pickColor,
+        pickColorFromHex,
         reset
     };
 }
+

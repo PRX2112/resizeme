@@ -31,6 +31,10 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
         error,
         quality,
         setQuality,
+        targetKb,
+        setTargetKb,
+        mode,
+        setMode,
         loadFile,
         reset,
     } = useImageCompress();
@@ -174,26 +178,101 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
                             </div>
 
                             {/* Controls */}
-                            <div className="card">
-                                <div className="flex justify-between items-center mb-4">
-                                    <label className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        Quality
-                                    </label>
-                                    <span className="text-primary font-bold">{quality}%</span>
+                            <div className="card space-y-4">
+                                {/* Compression Mode Selector */}
+                                <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                    <button
+                                        onClick={() => setMode('quality')}
+                                        className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                            mode === 'quality'
+                                                ? 'bg-primary text-white'
+                                                : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        Quality (%)
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setMode('targetSize');
+                                            if (!targetKb) setTargetKb(100);
+                                        }}
+                                        className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                            mode === 'targetSize'
+                                                ? 'bg-primary text-white'
+                                                : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        Target Size (KB)
+                                    </button>
                                 </div>
 
-                                <input
-                                    type="range"
-                                    min="10"
-                                    max="100"
-                                    value={quality}
-                                    onChange={(e) => setQuality(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary mb-2"
-                                />
-                                <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Smaller File</span>
-                                    <span>Better Quality</span>
-                                </div>
+                                {mode === 'quality' ? (
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                Image Quality
+                                            </label>
+                                            <span className="text-primary font-bold">{quality}%</span>
+                                        </div>
+
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max="95"
+                                            value={quality}
+                                            onChange={(e) => setQuality(Number(e.target.value))}
+                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                                        />
+                                        <div className="flex justify-between text-xs text-gray-500">
+                                            <span>Smaller File (10%)</span>
+                                            <span>Maximum Quality (95%)</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                Target File Size
+                                            </label>
+                                            <span className="text-primary font-bold font-mono">{targetKb || 100} KB</span>
+                                        </div>
+
+                                        {/* Quick KB Presets */}
+                                        <div className="grid grid-cols-5 gap-1.5">
+                                            {[20, 50, 100, 200, 500].map((kb) => (
+                                                <button
+                                                    key={kb}
+                                                    onClick={() => setTargetKb(kb)}
+                                                    className={`py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                                                        targetKb === kb
+                                                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary/50 text-gray-600 dark:text-gray-300'
+                                                    }`}
+                                                >
+                                                    {kb}KB
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="pt-2">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="10"
+                                                    max="5000"
+                                                    value={targetKb || ''}
+                                                    onChange={(e) => setTargetKb(Number(e.target.value) || null)}
+                                                    placeholder="Custom KB (e.g. 50)"
+                                                    className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-mono focus:ring-2 focus:ring-primary"
+                                                />
+                                                <span className="text-xs text-gray-400 font-bold">KB</span>
+                                            </div>
+                                            <p className="text-[11px] text-gray-500 mt-1.5">
+                                                Automated binary search optimization targets your exact byte limit.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Download */}

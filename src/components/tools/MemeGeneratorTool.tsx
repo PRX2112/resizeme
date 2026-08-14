@@ -44,9 +44,13 @@ export default function MemeGeneratorTool({ title }: MemeGeneratorToolProps) {
     const isDraggingRef = useRef(false);
     const lastMousePosRef = useRef({ x: 0, y: 0 });
 
-    // Handle drag interaction
-    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Handle unified pointer drag interaction (Touch + Mouse + Pen)
+    const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!canvasRef.current) return;
+
+        try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {}
 
         const rect = canvasRef.current.getBoundingClientRect();
         const scaleX = canvasRef.current.width / rect.width;
@@ -55,13 +59,10 @@ export default function MemeGeneratorTool({ title }: MemeGeneratorToolProps) {
         const x = (e.clientX - rect.left) * scaleX;
         const y = (e.clientY - rect.top) * scaleY;
 
-        // Check if any text is clicked
-        // Simple hit detection: rough bounding box
+        // Check if any text layer is clicked/touched
         const clickedText = texts.slice().reverse().find(text => {
-            // Approximate width based on font size/length - simple heuristic
-            // ideally check canvas context.measureText but we don't have context here easily without ref storing
-            const estimatedWidth = text.fontSize * 0.6 * text.content.length;
-            const estimatedHeight = text.fontSize;
+            const estimatedWidth = Math.max(80, text.fontSize * 0.65 * text.content.length);
+            const estimatedHeight = text.fontSize * 1.2;
 
             return (
                 x >= text.x - estimatedWidth / 2 &&
@@ -80,7 +81,7 @@ export default function MemeGeneratorTool({ title }: MemeGeneratorToolProps) {
         }
     };
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!isDraggingRef.current || !selectedTextId || !canvasRef.current) return;
 
         const rect = canvasRef.current.getBoundingClientRect();
@@ -93,16 +94,21 @@ export default function MemeGeneratorTool({ title }: MemeGeneratorToolProps) {
         const text = texts.find(t => t.id === selectedTextId);
         if (text) {
             updateText(selectedTextId, {
-                x: text.x + dx,
-                y: text.y + dy
+                x: Math.round(text.x + dx),
+                y: Math.round(text.y + dy)
             });
         }
 
         lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
         isDraggingRef.current = false;
+        try {
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+            }
+        } catch {}
     };
 
     const handleFileSelect = async (file: File) => {
@@ -175,11 +181,12 @@ export default function MemeGeneratorTool({ title }: MemeGeneratorToolProps) {
                             >
                                 <canvas
                                     ref={canvasRef}
-                                    onMouseDown={handleMouseDown}
-                                    onMouseMove={handleMouseMove}
-                                    onMouseUp={handleMouseUp}
-                                    onMouseLeave={handleMouseUp}
-                                    className="max-w-full max-h-[600px] object-contain cursor-crosshair"
+                                    onPointerDown={handlePointerDown}
+                                    onPointerMove={handlePointerMove}
+                                    onPointerUp={handlePointerUp}
+                                    onPointerCancel={handlePointerUp}
+                                    style={{ touchAction: 'none' }}
+                                    className="max-w-full max-h-[600px] object-contain cursor-move select-none"
                                 />
 
                                 <div className="absolute top-4 right-4 z-10">

@@ -17,7 +17,7 @@ const redirectMap: Record<string, string> = {
     '/image-convert': '/tools/convert',
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
     if (pathname === '/debug' || pathname.startsWith('/debug/')) {
@@ -36,4 +36,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
-

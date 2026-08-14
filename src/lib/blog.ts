@@ -8,7 +8,9 @@ export interface BlogPostMetadata {
   date: string;
   description: string;
   slug: string;
+  category?: string;
   author?: string;
+  readTime?: string;
   coverImage?: string;
 }
 
@@ -34,11 +36,13 @@ export function getBlogPosts(): BlogPostMetadata[] {
       const { data } = matter(fileContents);
       
       return {
-        title: data.title,
-        date: data.date,
-        description: data.description,
+        title: data.title || 'Untitled Guide',
+        date: data.date || '2026-01-01',
+        description: data.description || '',
         slug: file.replace(/\.md$/, ''),
-        author: data.author,
+        category: data.category || 'Guides',
+        author: data.author || 'ResizeMe Team',
+        readTime: data.readTime || '6 min read',
         coverImage: data.coverImage,
       } as BlogPostMetadata;
     })
@@ -61,13 +65,16 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
   
   return {
     metadata: {
-      title: data.title,
-      date: data.date,
-      description: data.description,
+      title: data.title || 'Untitled Guide',
+      date: data.date || '2026-01-01',
+      description: data.description || '',
       slug,
-      author: data.author,
+      category: data.category || 'Guides',
+      author: data.author || 'ResizeMe Team',
+      readTime: data.readTime || '6 min read',
       coverImage: data.coverImage,
     },
     content: htmlContent,
   };
 }
+

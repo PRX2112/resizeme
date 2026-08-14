@@ -29,6 +29,7 @@
     "framer-motion": "^12.23.25",
     "googleapis": "^167.0.0",
     "gray-matter": "^4.0.3",
+    "heic2any": "^0.0.4",
     "jszip": "^3.10.1",
     "lucide-react": "^0.556.0",
     "marked": "^18.0.4",

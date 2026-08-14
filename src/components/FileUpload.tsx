@@ -13,7 +13,7 @@ interface FileUploadProps {
 
 export default function FileUpload({
     onFileSelect,
-    accept = 'image/*',
+    accept = 'image/*,.heic,.heif',
     maxSizeMB = Infinity,
     currentFile,
     onClear,
@@ -24,14 +24,15 @@ export default function FileUpload({
     const validateFile = (file: File): boolean => {
         setError('');
 
+        const fileNameLower = file.name.toLowerCase();
+        const isHeic = fileNameLower.endsWith('.heic') || fileNameLower.endsWith('.heif');
+
         // Check file type
-        if (!file.type.startsWith('image/')) {
-            setError('Please upload an image file');
+        if (!file.type.startsWith('image/') && !isHeic) {
+            setError('Please upload a valid image file (PNG, JPG, WebP, HEIC, GIF, AVIF)');
             return false;
         }
 
-        // Removed artificial file size limit
-        
         return true;
     };
 

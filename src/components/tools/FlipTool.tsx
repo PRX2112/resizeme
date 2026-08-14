@@ -45,20 +45,16 @@ export default function FlipTool({ title }: FlipToolProps) {
 
     const handleDownload = () => {
         if (result) {
-            const filename = `flipped-image.${originalFile?.name.split('.').pop() || 'png'}`;
+            const ext = originalFile?.name.split('.').pop() || 'png';
+            const baseName = originalFile?.name.substring(0, originalFile.name.lastIndexOf('.')) || 'image';
+            const flipLabel = flipH && flipV ? 'flipped_hv' : flipH ? 'flipped_h' : flipV ? 'flipped_v' : 'flipped';
+            const filename = `${baseName}_${flipLabel}.${ext}`;
+            
             downloadFile(result.image, filename);
 
-            // Convert base64 to blob for Drive save
-            const base64Data = result.image.split(',')[1];
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            if (result.blob) {
+                setProcessedImageBlob(result.blob);
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'image/png' });
-
-            setProcessedImageBlob(blob);
             setProcessedFileName(filename);
         }
     };

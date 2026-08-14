@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { fileToBase64, downloadFile } from '@/utils/imageUtils';
+import { downloadFile } from '@/utils/imageUtils';
+import { prepareImageForServer } from '@/utils/clientImagePreprocess';
 
 export interface ConvertFile {
     file: File;
@@ -13,15 +14,56 @@ export function useImageConvert() {
 
     const addFiles = useCallback(async (newFiles: File[]) => {
         const processed: ConvertFile[] = [];
-        for (const file of newFiles) {
-            // Basic validation
-            if (!file.type.startsWith('image/')) continue;
-            processed.push({
-                file,
-                preview: URL.createObjectURL(file)
-            });
+        setIsConverting(true);
+        setError(null);
+
+        try {
+            for (const file of newFiles) {
+                const fileNameLower = file.name.toLowerCase();
+                const isHeic = fileNameLower.endsWith('.heic') ||
+                               fileNameLower.endsWith('.heif') ||
+                               file.type.toLowerCase().includes('heic') ||
+                               file.type.toLowerCase().includes('heif');
+
+                if (isHeic) {
+                    try {
+                        // Dynamic import of heic2any in browser
+                        const heic2any = (await import('heic2any')).default;
+                        const convertedBlobOrBlobs = await heic2any({
+                            blob: file,
+                            toType: 'image/jpeg',
+                            quality: 0.95,
+                        });
+                        const convertedBlob = Array.isArray(convertedBlobOrBlobs) ? convertedBlobOrBlobs[0] : convertedBlobOrBlobs;
+                        const convertedName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
+                        const standardFile = new File([convertedBlob], convertedName, { type: 'image/jpeg' });
+
+                        processed.push({
+                            file: standardFile,
+                            preview: URL.createObjectURL(convertedBlob),
+                        });
+                        continue;
+                    } catch (heicErr) {
+                        console.error('HEIC client decoding failed:', heicErr);
+                    }
+                }
+
+                // Standard image file validation
+                if (file.type.startsWith('image/') || isHeic) {
+                    processed.push({
+                        file,
+                        preview: URL.createObjectURL(file),
+                    });
+                }
+            }
+
+            setFiles(prev => [...prev, ...processed]);
+        } catch (err: any) {
+            console.error('Failed to add files:', err);
+            setError(err.message || 'Failed to process files');
+        } finally {
+            setIsConverting(false);
         }
-        setFiles(prev => [...prev, ...processed]);
     }, []);
 
     const removeFile = useCallback((index: number) => {
@@ -41,10 +83,13 @@ export function useImageConvert() {
 
         try {
             const imagesPayload = await Promise.all(
-                files.map(async (f) => ({
-                    name: f.file.name,
-                    content: await fileToBase64(f.file)
-                }))
+                files.map(async (f) => {
+                    const { base64 } = await prepareImageForServer(f.file);
+                    return {
+                        name: f.file.name,
+                        content: base64,
+                    };
+                })
             );
 
             const response = await fetch('/api/convert', {

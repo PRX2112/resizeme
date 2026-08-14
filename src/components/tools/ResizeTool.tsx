@@ -17,6 +17,7 @@ import {
     X,
 } from 'lucide-react';
 import { formatFileSize, calculatePercentageSize, fileToBase64, downloadFile } from '@/utils/imageUtils';
+import { prepareImageForServer } from '@/utils/clientImagePreprocess';
 
 import RecentUploads, { addRecentUpload } from '@/components/RecentUploads';
 import ToolRecommendations from '@/components/ToolRecommendations';
@@ -209,8 +210,8 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
             if (useServerProcessing) {
                 setIsServerProcessing(true);
 
-                // Convert file to base64
-                const base64 = await fileToBase64(originalFile);
+                // Prepare and pre-process image if needed (< 4.5MB payload guarantee)
+                const { base64 } = await prepareImageForServer(originalFile);
 
                 // Call server API
                 const response = await fetch('/api/resize', {
@@ -227,7 +228,8 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
                 });
 
                 if (!response.ok) {
-                    throw new Error('Server processing failed');
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Server processing failed');
                 }
 
                 const result = await response.json();

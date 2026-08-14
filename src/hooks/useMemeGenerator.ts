@@ -101,23 +101,29 @@ export function useMemeGenerator() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Set canvas dimensions
-        canvas.width = image.width;
-        canvas.height = image.height;
+        // Set canvas dimensions to full natural resolution
+        const naturalW = image.naturalWidth || image.width;
+        const naturalH = image.naturalHeight || image.height;
+        canvas.width = naturalW;
+        canvas.height = naturalH;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Draw image
-        ctx.drawImage(image, 0, 0);
+        ctx.drawImage(image, 0, 0, naturalW, naturalH);
 
         // Draw texts
         texts.forEach(text => {
-            ctx.font = `bold ${text.fontSize}px Impact, sans-serif`;
+            ctx.font = `900 ${text.fontSize}px Impact, "Arial Black", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             // Stroke
             ctx.strokeStyle = text.strokeColor;
-            ctx.lineWidth = text.fontSize / 15;
+            ctx.lineWidth = Math.max(3, text.fontSize / 12);
             ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
             ctx.strokeText(text.content, text.x, text.y);
 
             // Fill
@@ -130,13 +136,13 @@ export function useMemeGenerator() {
                 const height = text.fontSize;
                 const width = metrics.width;
                 ctx.strokeStyle = '#3b82f6'; // Primary blue
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = Math.max(2, naturalW * 0.003);
+                ctx.setLineDash([8, 8]);
                 ctx.strokeRect(
-                    text.x - width / 2 - 10,
-                    text.y - height / 2 - 5,
-                    width + 20,
-                    height + 10
+                    text.x - width / 2 - 12,
+                    text.y - height / 2 - 8,
+                    width + 24,
+                    height + 16
                 );
                 ctx.setLineDash([]);
             }

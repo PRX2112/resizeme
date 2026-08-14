@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { validateImageFile, loadImage, fileToBase64, downloadFile, formatFileSize } from '@/utils/imageUtils';
+import { validateImageFile, loadImage, downloadFile, formatFileSize } from '@/utils/imageUtils';
+import { prepareImageForServer } from '@/utils/clientImagePreprocess';
 
 export interface CompressionResult {
     image: string; // base64
@@ -15,6 +16,8 @@ export function useImageCompress() {
     const [isCompressing, setIsCompressing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [quality, setQuality] = useState(80);
+    const [targetKb, setTargetKb] = useState<number | null>(null);
+    const [mode, setMode] = useState<'quality' | 'targetSize'>('quality');
 
     // Cleanup preview URL
     useEffect(() => {
@@ -41,7 +44,7 @@ export function useImageCompress() {
             setOriginalFile(file);
 
             // Initial compression with default quality
-            await compressImage(file, 80);
+            await compressImage(file, 80, null);
 
         } catch (err) {
             console.error('Failed to load image:', err);
@@ -49,21 +52,28 @@ export function useImageCompress() {
         }
     }, []);
 
-    const compressImage = useCallback(async (file: File, qualityValue: number) => {
+    const compressImage = useCallback(async (file: File, qualityValue: number, targetKbValue: number | null) => {
         setIsCompressing(true);
         setError(null);
 
         try {
-            const base64 = await fileToBase64(file);
+            // Pre-process on client if file exceeds Vercel 4.5MB threshold
+            const { base64 } = await prepareImageForServer(file);
+
+            const payload: any = {
+                image: base64,
+            };
+
+            if (mode === 'targetSize' && targetKbValue && targetKbValue > 0) {
+                payload.targetKb = targetKbValue;
+            } else {
+                payload.quality = qualityValue;
+            }
 
             const response = await fetch('/api/compress', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image: base64,
-                    quality: qualityValue,
-                    // format: optional, defaults to original
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -80,18 +90,18 @@ export function useImageCompress() {
         } finally {
             setIsCompressing(false);
         }
-    }, []);
+    }, [mode]);
 
-    // Defounce quality change
+    // Debounce changes in quality or targetKb
     useEffect(() => {
         if (!originalFile) return;
 
         const timer = setTimeout(() => {
-            compressImage(originalFile, quality);
-        }, 500); // 500ms debounce
+            compressImage(originalFile, quality, targetKb);
+        }, 400);
 
         return () => clearTimeout(timer);
-    }, [quality, originalFile, compressImage]);
+    }, [quality, targetKb, mode, originalFile, compressImage]);
 
     const reset = useCallback(() => {
         if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -102,6 +112,8 @@ export function useImageCompress() {
         setCompressedResult(null);
         setError(null);
         setQuality(80);
+        setTargetKb(null);
+        setMode('quality');
     }, [previewUrl]);
 
     return {
@@ -112,7 +124,13 @@ export function useImageCompress() {
         error,
         quality,
         setQuality,
+        targetKb,
+        setTargetKb,
+        mode,
+        setMode,
         loadFile,
+        compressImage,
         reset,
     };
 }
+
