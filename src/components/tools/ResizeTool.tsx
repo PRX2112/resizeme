@@ -15,21 +15,20 @@ import {
     Smartphone,
     Monitor,
     X,
+    Sparkles,
+    Check,
 } from 'lucide-react';
-import { formatFileSize, calculatePercentageSize, fileToBase64, downloadFile } from '@/utils/imageUtils';
-import { prepareImageForServer } from '@/utils/clientImagePreprocess';
-
-import RecentUploads, { addRecentUpload } from '@/components/RecentUploads';
+import { formatFileSize, calculatePercentageSize, downloadFile } from '@/utils/imageUtils';
+import { trackImageUpload, trackImageDownload, trackTimeOnTool } from '@/lib/analytics';
 import ToolRecommendations from '@/components/ToolRecommendations';
-import BookmarkPrompt, { incrementToolUsage } from '@/components/BookmarkPrompt';
-import { trackImageUpload, trackImageDownload, trackToolConversion, trackTimeOnTool } from '@/lib/analytics';
+import AdBanner from '@/components/AdBanner';
 
 const PRESET_SIZES = [
-    { name: 'Instagram Post', width: 1080, height: 1080, icon: Instagram },
-    { name: 'Instagram Story', width: 1080, height: 1920, icon: Instagram },
-    { name: 'Facebook Cover', width: 820, height: 312, icon: Facebook },
-    { name: 'Twitter Header', width: 1500, height: 500, icon: Twitter },
-    { name: 'HD', width: 1920, height: 1080, icon: Monitor },
+    { name: 'IG Post', width: 1080, height: 1080, icon: Instagram },
+    { name: 'IG Story', width: 1080, height: 1920, icon: Instagram },
+    { name: 'FB Cover', width: 820, height: 312, icon: Facebook },
+    { name: 'X Header', width: 1500, height: 500, icon: Twitter },
+    { name: '1080p HD', width: 1920, height: 1080, icon: Monitor },
     { name: 'Mobile', width: 750, height: 1334, icon: Smartphone },
 ];
 
@@ -40,10 +39,10 @@ const FORMATS = [
 ];
 
 const PERCENTAGE_PRESETS = [
+    { label: '25%', value: 25 },
     { label: '50%', value: 50 },
     { label: '75%', value: 75 },
     { label: '100%', value: 100 },
-    { label: '125%', value: 125 },
     { label: '150%', value: 150 },
     { label: '200%', value: 200 },
 ];
@@ -70,19 +69,18 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
     const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
     const [quality, setQuality] = useState(95);
     const [format, setFormat] = useState(defaultFormat);
-    const [useServerProcessing, setUseServerProcessing] = useState(true);
     const [isServerProcessing, setIsServerProcessing] = useState(false);
 
-    const [processedImageBlob, setProcessedImageBlob] = useState<Blob | null>(null);
-    const [processedFileName, setProcessedFileName] = useState<string>('');
     const [startTime, setStartTime] = useState<number>(0);
-    const [showRecommendations, setShowRecommendations] = useState(false);
 
     // Custom Presets State
     const [customPresets, setCustomPresets] = useState<{ name: string; width: number; height: number }[]>([]);
     const [newPresetName, setNewPresetName] = useState('');
 
-    // Load custom presets and favorite format
+    const { limits, trackDownload } = useUsageTracking();
+    const contentAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT || process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
+
+    // Load custom presets
     useEffect(() => {
         try {
             const stored = localStorage.getItem('resizeme_custom_presets');
@@ -100,73 +98,41 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
 
     const saveCustomPreset = () => {
         if (!newPresetName.trim() || !width || !height) return;
-        const newPreset = {
-            name: newPresetName.trim(),
-            width,
-            height
-        };
-        const updated = [...customPresets, newPreset];
+        const updated = [...customPresets, { name: newPresetName.trim(), width, height }];
         setCustomPresets(updated);
-        localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
         setNewPresetName('');
+        try {
+            localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
+        } catch (e) {
+            console.error('Failed to save preset:', e);
+        }
     };
 
     const deleteCustomPreset = (index: number) => {
         const updated = customPresets.filter((_, i) => i !== index);
         setCustomPresets(updated);
-        localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
+        try {
+            localStorage.setItem('resizeme_custom_presets', JSON.stringify(updated));
+        } catch (e) {
+            console.error('Failed to delete preset:', e);
+        }
     };
 
-    const handleFormatChange = (fmt: string) => {
-        setFormat(fmt);
-        localStorage.setItem('resizeme_fav_format', fmt);
+    const handleFormatChange = (newFormat: string) => {
+        setFormat(newFormat);
+        try {
+            localStorage.setItem('resizeme_fav_format', newFormat);
+        } catch (e) {
+            console.error('Failed to save favorite format:', e);
+        }
     };
 
-    // Usage tracking
-    const { usage, limits, canDownload, canProcessFile, trackDownload, showUpgradePrompt } = useUsageTracking();
-
-    // Update dimensions when image loads
     useEffect(() => {
         if (originalImage) {
             setWidth(originalImage.width);
             setHeight(originalImage.height);
         }
     }, [originalImage]);
-
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                handleReset();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                if (!isProcessing && !isServerProcessing && width && height) {
-                    handleDownload();
-                }
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
-                e.preventDefault();
-                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                if (fileInput) {
-                    fileInput.click();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [width, height, isProcessing, isServerProcessing, originalFile]);
-
-    const handleFileSelect = async (file: File) => {
-        // No limit
-
-
-        // Track upload and start timer
-        trackImageUpload('Resize Tool', file.size, file.type);
-        setStartTime(Date.now());
-        incrementToolUsage();
-
-        await loadImageFile(file);
-    };
 
     const handleWidthChange = (newWidth: number) => {
         setWidth(newWidth);
@@ -184,113 +150,52 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
         }
     };
 
-    const handlePresetClick = (presetWidth: number, presetHeight: number) => {
-        setWidth(presetWidth);
-        setHeight(presetHeight);
-    };
-
     const handlePercentageClick = (percentage: number) => {
         if (originalImage) {
-            const newDimensions = calculatePercentageSize(
+            const { width: newWidth, height: newHeight } = calculatePercentageSize(
                 originalImage.width,
                 originalImage.height,
                 percentage
             );
-            setWidth(newDimensions.width);
-            setHeight(newDimensions.height);
+            setWidth(newWidth);
+            setHeight(newHeight);
         }
     };
 
+    const handlePresetClick = (presetWidth: number, presetHeight: number) => {
+        setWidth(presetWidth);
+        setHeight(presetHeight);
+        setMaintainAspectRatio(false);
+    };
+
+    const handleFileSelect = async (file: File) => {
+        trackImageUpload('Resize Tool', file.size, file.type);
+        setStartTime(Date.now());
+        await loadImageFile(file);
+    };
+
     const handleDownload = async () => {
-        if (!originalFile || !originalImage) return;
+        if (!originalFile) return;
 
-        // No limit
-
+        setIsServerProcessing(true);
         try {
-            if (useServerProcessing) {
-                setIsServerProcessing(true);
+            // High-speed browser canvas processing with direct blob download
+            await download({
+                width,
+                height,
+                maintainAspectRatio,
+                format,
+                quality: quality / 100,
+            });
 
-                // Prepare and pre-process image if needed (< 4.5MB payload guarantee)
-                const { base64 } = await prepareImageForServer(originalFile);
-
-                // Call server API
-                const response = await fetch('/api/resize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        image: base64,
-                        width,
-                        height,
-                        format,
-                        quality,
-                        preserveMetadata: false,
-                    }),
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Server processing failed');
-                }
-
-                const result = await response.json();
-
-                // Convert base64 to blob for Drive save
-                const base64Data = result.image.split(',')[1];
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: `image/${format}` });
-
-                // Download the result
-                const filename = `resized-${width}x${height}.${format}`;
-                downloadFile(result.image, filename);
-
-                // Store for Drive save
-                setProcessedImageBlob(blob);
-                setProcessedFileName(filename);
-
-                // Track download and conversion
-                await trackDownload(originalFile.size, 'Resize Tool', originalFile.name);
-                trackImageDownload('Resize Tool', blob.size, `image/${format}`);
-
-                const processingTime = Date.now() - startTime;
-                trackToolConversion('Resize Tool', processingTime);
-
-                // Add to recent uploads
-                addRecentUpload('Resize Image', '/tools/resize');
-
-                // Show recommendations
-                setShowRecommendations(true);
-
-                setIsServerProcessing(false);
-            } else {
-                // Use client-side processing
-                await download({
-                    width,
-                    height,
-                    maintainAspectRatio,
-                    quality: quality / 100,
-                    format,
-                });
-
-                // Track download and conversion
-                await trackDownload(originalFile.size, 'Resize Tool', originalFile.name);
-                trackImageDownload('Resize Tool', originalFile.size, `image/${format}`);
-
-                const processingTime = Date.now() - startTime;
-                trackToolConversion('Resize Tool', processingTime);
-
-                // Add to recent uploads
-                addRecentUpload('Resize Image', '/tools/resize');
-
-                // Show recommendations
-                setShowRecommendations(true);
+            if (startTime > 0) {
+                const duration = Math.round((Date.now() - startTime) / 1000);
+                trackTimeOnTool('Resize Tool', duration);
             }
+            await trackDownload(originalFile.size, 'Resize Tool', originalFile.name);
         } catch (err) {
-            console.error('Download failed:', err);
+            console.error('Download error:', err);
+        } finally {
             setIsServerProcessing(false);
         }
     };
@@ -299,153 +204,186 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
         reset();
         setWidth(0);
         setHeight(0);
+        setMaintainAspectRatio(true);
         setQuality(95);
         setFormat(defaultFormat);
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20 py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-950 dark:to-gray-900 py-6 sm:py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Header */}
-                <div className="text-center mb-12 animate-fade-in">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                        {title || (
-                            <>Image <span className="gradient-text">Resize</span></>
-                        )}
+                <div className="text-center">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                        {title || 'Image Resizer'}
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                        Resize your images to any dimension while maintaining quality
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl mx-auto">
+                        Resize images to exact dimensions or scale percentages with high-fidelity Lanczos3 sinc kernel.
                     </p>
-
-                    <a
-                        href="/tools/resize/bulk"
-                        className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white dark:bg-gray-800 border-2 border-primary/20 hover:border-primary text-primary font-medium transition-all hover:shadow-lg hover:shadow-primary/10"
-                    >
-                        <span>✨ Need to resize multiple images?</span>
-                        <span className="font-bold">Try Bulk Resize →</span>
-                    </a>
                 </div>
 
-
-
-                {/* Recent Uploads */}
-                <RecentUploads />
-
-                {/* Main Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column - Upload & Preview */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* File Upload */}
-                        {!originalFile && (
-                            <div className="animate-fade-in">
+                {/* Main Workspace */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column (Canvas & Preview Only) */}
+                    <div className="lg:col-span-7 space-y-4">
+                        {!originalFile ? (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                                 <FileUpload
                                     onFileSelect={handleFileSelect}
                                     accept="image/*"
                                     maxSizeMB={limits.maxFileSize === Infinity ? Infinity : limits.maxFileSize / (1024 * 1024)}
                                 />
                             </div>
-                        )}
-
-                        {/* Preview */}
-                        {originalFile && previewUrl && (
-                            <div className="card animate-fade-in">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                            Preview
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            Original: {originalImage?.width} × {originalImage?.height}px
-                                            {originalFile && ` • ${formatFileSize(originalFile.size)}`}
-                                        </p>
+                        ) : (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-5 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200">Original:</span>{' '}
+                                        {originalImage?.width} × {originalImage?.height}px • {formatFileSize(originalFile.size)}
                                     </div>
                                     <button
                                         onClick={handleReset}
-                                        className="btn btn-ghost flex items-center gap-2"
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                                     >
-                                        <RotateCcw className="w-4 h-4" />
-                                        Reset
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Reset</span>
                                     </button>
                                 </div>
 
-                                <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                {/* Preview Viewport */}
+                                <div className="relative rounded-xl overflow-hidden bg-gray-950 flex items-center justify-center min-h-[340px] max-h-[500px]">
                                     <img
-                                        src={previewUrl}
+                                        src={previewUrl!}
                                         alt="Preview"
-                                        className="w-full h-auto max-h-[500px] object-contain"
+                                        className="max-w-full max-h-[480px] object-contain"
                                     />
+                                    <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-mono backdrop-blur-sm">
+                                        Target: {width} × {height}px
+                                    </div>
                                 </div>
 
                                 {error && (
-                                    <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                                    <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400 text-center">
+                                        {error}
                                     </div>
                                 )}
                             </div>
                         )}
+                    </div>
 
-                        {/* Preset Sizes */}
-                        {originalFile && (
-                            <div className="card animate-fade-in">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Preset Sizes
-                                </h3>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {/* Right Column (Consolidated Controls: Dimensions, Scale %, Presets, Format, Download) */}
+                    <div className="lg:col-span-5 space-y-4">
+                        <div className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-5 ${!originalFile ? 'opacity-50 pointer-events-none' : ''}`}>
+                            {/* Section 1: Dimensions */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                        Target Dimensions
+                                    </h2>
+                                    <button
+                                        onClick={() => setMaintainAspectRatio(!maintainAspectRatio)}
+                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                            maintainAspectRatio
+                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                                        }`}
+                                    >
+                                        {maintainAspectRatio ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                                        <span>{maintainAspectRatio ? 'Aspect Locked' : 'Unlocked'}</span>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-gray-500 mb-1">
+                                            Width (px)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={width || ''}
+                                            onChange={(e) => handleWidthChange(Number(e.target.value))}
+                                            className="w-full px-3 py-2 text-sm font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-900 transition-all"
+                                            min="1"
+                                            placeholder="Width"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-gray-500 mb-1">
+                                            Height (px)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={height || ''}
+                                            onChange={(e) => handleHeightChange(Number(e.target.value))}
+                                            className="w-full px-3 py-2 text-sm font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-900 transition-all"
+                                            min="1"
+                                            placeholder="Height"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Scale by Percentage */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Scale Percentage
+                                </span>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                    {PERCENTAGE_PRESETS.map((preset) => (
+                                        <button
+                                            key={preset.value}
+                                            onClick={() => handlePercentageClick(preset.value)}
+                                            className="py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-gray-700 dark:text-gray-300 transition-colors"
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Section 3: Preset Sizes */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Standard Presets
+                                </span>
+                                <div className="grid grid-cols-3 gap-1.5">
                                     {PRESET_SIZES.map((preset) => (
                                         <button
                                             key={preset.name}
                                             onClick={() => handlePresetClick(preset.width, preset.height)}
-                                            className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-primary/5 transition-all duration-200 text-left"
+                                            className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 text-left transition-colors bg-gray-50/50 dark:bg-gray-800/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20"
                                         >
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                                                <preset.icon className="w-5 h-5 text-white" />
+                                            <div className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                                                {preset.name}
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                    {preset.name}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {preset.width} × {preset.height}
-                                                </p>
+                                            <div className="text-[10px] text-gray-500">
+                                                {preset.width}×{preset.height}
                                             </div>
                                         </button>
                                     ))}
                                 </div>
 
-                                {/* Custom Presets Block */}
+                                {/* Custom Presets */}
                                 {customPresets.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 animate-fade-in">
-                                        <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-                                            Your Custom Presets
-                                        </h4>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div className="pt-2 space-y-1">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">My Presets</span>
+                                        <div className="flex flex-wrap gap-1.5">
                                             {customPresets.map((preset, index) => (
-                                                <div 
+                                                <div
                                                     key={index}
-                                                    className="flex items-center justify-between p-3 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary transition-all duration-200 group relative bg-gray-50/50 dark:bg-gray-900/20"
+                                                    className="inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/50 text-[11px] text-indigo-700 dark:text-indigo-300"
                                                 >
                                                     <button
                                                         onClick={() => handlePresetClick(preset.width, preset.height)}
-                                                        className="flex items-center gap-3 text-left flex-1 min-w-0"
+                                                        className="font-medium hover:underline"
                                                     >
-                                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                                            ★
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                                                {preset.name}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {preset.width} × {preset.height}px
-                                                            </p>
-                                                        </div>
+                                                        {preset.name} ({preset.width}×{preset.height})
                                                     </button>
                                                     <button
                                                         onClick={() => deleteCustomPreset(index)}
-                                                        className="p-1 hover:bg-red-50 dark:hover:bg-red-950/20 rounded text-gray-400 hover:text-red-500 transition-colors ml-2 flex-shrink-0"
-                                                        aria-label="Delete preset"
+                                                        className="text-gray-400 hover:text-red-500"
                                                     >
-                                                        <X className="w-4 h-4" />
+                                                        <X className="w-3 h-3" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -453,170 +391,69 @@ export default function ResizeTool({ defaultFormat = 'png', title }: ResizeToolP
                                     </div>
                                 )}
                             </div>
-                        )}
 
-                        {/* Percentage Scaling */}
-                        {originalFile && (
-                            <div className="card animate-fade-in">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Scale by Percentage
-                                </h3>
-                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                                    {PERCENTAGE_PRESETS.map((preset) => (
-                                        <button
-                                            key={preset.value}
-                                            onClick={() => handlePercentageClick(preset.value)}
-                                            className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-primary/5 transition-all duration-200 text-sm font-medium text-gray-900 dark:text-white"
-                                        >
-                                            {preset.label}
-                                        </button>
-                                    ))}
+                            {/* Section 4: Format & Quality */}
+                            <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                        Output Format
+                                    </span>
+                                    <span className="text-[11px] text-gray-500">Quality: {quality}%</span>
                                 </div>
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Right Column - Controls */}
-                    {originalFile && (
-                        <div className="space-y-6 animate-fade-in">
-                            {/* Dimensions */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Dimensions
-                                </h3>
-
-                                <div className="space-y-4">
-                                    {/* Width */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Width (px)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={width}
-                                            onChange={(e) => handleWidthChange(Number(e.target.value))}
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                            min="1"
-                                        />
-                                    </div>
-
-                                    {/* Aspect Ratio Lock */}
-                                    <button
-                                        onClick={() => setMaintainAspectRatio(!maintainAspectRatio)}
-                                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary transition-colors"
-                                    >
-                                        {maintainAspectRatio ? (
-                                            <Lock className="w-4 h-4 text-primary" />
-                                        ) : (
-                                            <Unlock className="w-4 h-4 text-gray-400" />
-                                        )}
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            {maintainAspectRatio ? 'Locked' : 'Unlocked'} Aspect Ratio
-                                        </span>
-                                    </button>
-
-                                    {/* Height */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Height (px)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={height}
-                                            onChange={(e) => handleHeightChange(Number(e.target.value))}
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                            min="1"
-                                        />
-                                    </div>
-
-                                    {/* Save Preset */}
-                                    <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
-                                        <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-2">
-                                            Save current dimensions
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Preset name (e.g. Banner)"
-                                                value={newPresetName}
-                                                onChange={(e) => setNewPresetName(e.target.value)}
-                                                className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                            />
-                                            <button
-                                                onClick={saveCustomPreset}
-                                                disabled={!newPresetName.trim() || !width || !height}
-                                                className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                Save
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Format */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Output Format
-                                </h3>
                                 <div className="grid grid-cols-3 gap-2">
                                     {FORMATS.map((fmt) => (
                                         <button
                                             key={fmt.value}
                                             onClick={() => handleFormatChange(fmt.value)}
-                                            className={`py-2 px-4 rounded-lg font-medium transition-all ${format === fmt.value
-                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                }`}
+                                            className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                                                format === fmt.value
+                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                            }`}
                                         >
                                             {fmt.label}
                                         </button>
                                     ))}
                                 </div>
-                            </div>
 
-                            {/* Quality */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Quality: {quality}%
-                                </h3>
                                 <input
                                     type="range"
                                     min="1"
                                     max="100"
                                     value={quality}
                                     onChange={(e) => setQuality(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                                    className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                 />
-                                <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                    <span>Lower size</span>
-                                    <span>Higher quality</span>
-                                </div>
                             </div>
 
-                            {/* Download Button */}
+                            {/* Section 5: Action Button */}
                             <button
                                 onClick={handleDownload}
-                                disabled={isProcessing || isServerProcessing || !width || !height}
-                                className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isProcessing || isServerProcessing || !width || !height || !originalFile}
+                                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                             >
-                                <Download className="w-5 h-5" />
-                                {isProcessing || isServerProcessing ? 'Processing...' : `Download (${width} × ${height}px)`}
+                                <Download className="w-4 h-4" />
+                                <span>
+                                    {isProcessing || isServerProcessing
+                                        ? 'Processing...'
+                                        : `Download Image (${width || 0} × ${height || 0}px)`}
+                                </span>
                             </button>
-
-
                         </div>
-                    )}
+                    </div>
                 </div>
 
-                {/* Tool Recommendations */}
-                {showRecommendations && (
-                    <ToolRecommendations currentTool="resize" />
+                {/* Compact Horizontal Pill Bar for Related Tools */}
+                <ToolRecommendations currentTool="resize" />
+
+                {/* Ad Placement: In-Content Leaderboard Slot Directly Under Action Workspace */}
+                {contentAdSlot && (
+                    <div className="pt-2">
+                        <AdBanner dataAdSlot={contentAdSlot} dataAdFormat="horizontal" />
+                    </div>
                 )}
             </div>
-
-            {/* Bookmark Prompt */}
-            <BookmarkPrompt />
         </div>
     );
 }

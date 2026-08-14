@@ -101,15 +101,21 @@ export default function UltimateGuide() {
                                     </tr>
                                     <tr>
                                         <td className="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">WebP</td>
-                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Modern websites</td>
-                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Superior compression (30% smaller)</td>
-                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Not supported by very old browsers</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Modern websites, responsive graphics</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Superior compression (30% smaller than JPEG)</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Not supported by legacy IE browsers</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">AVIF</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Next-gen web delivery, high dynamic range</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Highest compression efficiency (up to 50% smaller)</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">Slightly higher encode latency</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                            <strong>Pro Tip:</strong> Use our <Link href="/tools/convert" className="text-blue-600 hover:underline">Format Converter</Link> to change your PNGs to WebP for instant performance gains.
+                            <strong>Pro Tip:</strong> Use our <Link href="/tools/convert" className="text-blue-600 hover:underline">Format Converter</Link> to change your PNGs and JPEGs to WebP or AVIF for instant performance gains.
                         </p>
                     </div>
 
@@ -128,12 +134,12 @@ export default function UltimateGuide() {
                                 The ResizeMe Difference
                             </h4>
                             <p className="text-gray-700 dark:text-gray-300">
-                                ResizeMe is different. We utilize advanced <strong>WebAssembly</strong> technology to process your images directly in your web browser. Your photos never leave your device. This means:
+                                ResizeMe is different. We utilize advanced <strong>WebAssembly and HTML5 Canvas</strong> technology to process your images directly in your web browser. Your photos never leave your device. This means:
                             </p>
                             <ul className="list-disc list-inside mt-2 text-gray-700 dark:text-gray-300">
-                                <li>0% risk of data breaches</li>
-                                <li>No waiting for uploads or downloads</li>
-                                <li>You can edit sensitive documents securely</li>
+                                <li>0% risk of data breaches or remote storage</li>
+                                <li>Zero waiting for upload or download bandwidth bottlenecks</li>
+                                <li>You can edit sensitive documents securely offline</li>
                             </ul>
                         </div>
                     </div>
@@ -141,7 +147,7 @@ export default function UltimateGuide() {
                     {/* Section 4: Social Media Cheat Sheet */}
                     <div>
                         <h3 className="flex items-center gap-3 text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                            Social Media Image Size Cheat Sheet (2025)
+                            Social Media Image Size Cheat Sheet (2026)
                         </h3>
                         <p className="text-gray-600 dark:text-gray-300 mb-6">
                             Stop guessing the right dimensions. Here is a quick reference for the most popular platforms. properly sized images prevent awkward cropping.

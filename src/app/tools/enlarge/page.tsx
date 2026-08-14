@@ -147,14 +147,11 @@ export default function EnlargePage() {
                         answer: 'Calculate your desired physical print size in inches and multiply both width and height by 300. For example, a 6×4 inch print requires 1800×1200 pixels. Use our 2× or 4× upscaler to reach those target dimensions.',
                     },
                     {
-                        question: 'Are my uploaded photos safe and private?',
-                        answer: 'Yes. All image processing operations occur in your local device browser memory. Your personal photos are never stored on remote disks or used for machine learning training.',
+                        question: 'Are my photos uploaded or stored on any server?',
+                        answer: 'No. All image processing operations occur in your local device browser memory. Your personal photos are never stored on remote disks or used for machine learning training.',
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="enlarge" />
         </>
     );
 }
-

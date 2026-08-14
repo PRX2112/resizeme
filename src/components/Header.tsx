@@ -1,144 +1,223 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
-import DropdownMenu from './DropdownMenu';
+import { Menu, X, ChevronDown, Sparkles, Layers, Sliders, Scissors, Minimize2, RefreshCw, Eraser, Maximize, Smile, Pipette, RotateCw, FlipHorizontal, Pencil } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
 
-export default function Header() {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
-
-    const resizeTools = [
-        { label: 'Image Resize', href: '/resize-image-online', description: 'Resize to any dimension' },
-        { label: 'Bulk Resize', href: '/tools/resize/bulk', description: 'Resize multiple images' },
-        { label: 'Resize to 100KB', href: '/resize-image-to-100kb', description: 'Hit exact file size' },
-        { label: '1920×1080 (Full HD)', href: '/resize-image-to-1920x1080', description: 'Wallpapers & presentations' },
-        { label: 'For Instagram', href: '/resize-image-for-instagram', description: 'Perfect Instagram sizes' },
-        { label: 'For WhatsApp DP', href: '/resize-image-for-whatsapp', description: 'WhatsApp profile photo' },
-        { label: 'For YouTube', href: '/resize-image-for-youtube', description: 'Thumbnail & channel art' },
-        { label: 'Passport Photo', href: '/resize-image-for-passport', description: 'ID & visa photo sizes' },
-    ];
-
-    const compressTools = [
-        { label: 'Image Compress', href: '/compress-image-online', description: 'Reduce file size' },
-        { label: 'Compress JPG', href: '/compress-jpg-online', description: 'JPEG compression' },
-        { label: 'Compress PNG', href: '/compress-png-online', description: 'PNG compression' },
-        { label: 'Reduce Image Size', href: '/reduce-image-size-online', description: 'Any format' },
-        { label: 'Compress to 50KB', href: '/compress-image-to-50kb', description: 'Hit 50KB target' },
-        { label: 'Compress to 200KB', href: '/compress-image-to-200kb', description: 'Hit 200KB target' },
-    ];
-
-    const convertTools = [
-        { label: 'Format Convert', href: '/convert-image-format', description: 'Convert between formats' },
-        { label: 'WebP to PNG', href: '/webp-to-png', description: 'WebP → PNG' },
-        { label: 'PNG to JPG', href: '/png-to-jpg', description: 'PNG → JPG' },
-        { label: 'JPG to PNG', href: '/convert-jpg-to-png', description: 'JPG → PNG' },
-        { label: 'PNG to WebP', href: '/convert-png-to-webp', description: 'PNG → WebP' },
-        { label: 'HEIC to JPG', href: '/tools/convert/heic-to-jpg', description: 'iPhone photos' },
-    ];
-
-    const cropTools = [
-        { label: 'Image Crop', href: '/crop-image-online', description: 'Crop with precision' },
-        { label: 'Crop PNG', href: '/tools/crop/png', description: 'PNG specific cropping' },
-        { label: 'Crop JPG', href: '/tools/crop/jpg', description: 'JPG specific cropping' },
-    ];
-
-        const moreTools = [
-    { label: 'Watermark', href: '/tools/watermark', description: 'Add text/image watermark' },
-    { label: 'Background Remover', href: '/tools/background-remover', description: 'AI background removal' },
-    { label: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes' },
-    { label: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors' },
-    { label: 'Flip Image', href: '/tools/flip', description: 'Flip horizontally/vertically' },
-    { label: 'Image Enlarger', href: '/tools/enlarge', description: 'Upscale images' },
+const allTools = [
+    {
+        name: 'Resize Image',
+        href: '/tools/resize',
+        desc: 'Exact dimensions or scale percentage',
+        icon: Sliders,
+    },
+    {
+        name: 'Bulk Resize',
+        href: '/tools/resize/bulk',
+        desc: 'Batch process multiple photos to ZIP',
+        icon: Layers,
+    },
+    {
+        name: 'Crop Image',
+        href: '/tools/crop',
+        desc: 'Preset aspect ratios & freeform crop',
+        icon: Scissors,
+    },
+    {
+        name: 'Compress Image',
+        href: '/tools/compress',
+        desc: 'Target KB binary search & quality tuning',
+        icon: Minimize2,
+    },
+    {
+        name: 'Convert Format',
+        href: '/tools/convert',
+        desc: 'PNG, JPG, WebP, AVIF, HEIC support',
+        icon: RefreshCw,
+    },
+    {
+        name: 'Background Remover',
+        href: '/tools/background-remover',
+        desc: '100% in-browser AI subject segmentation',
+        icon: Eraser,
+    },
+    {
+        name: 'Image Enlarger',
+        href: '/tools/enlarge',
+        desc: '2x & 4x Lanczos3 detail restoration',
+        icon: Maximize,
+    },
+    {
+        name: 'Watermark Photo',
+        href: '/tools/watermark',
+        desc: 'Text & logo protection with tile grids',
+        icon: Pencil,
+    },
+    {
+        name: 'Meme Generator',
+        href: '/tools/meme-generator',
+        desc: 'Retina text rendering with touch dragging',
+        icon: Smile,
+    },
+    {
+        name: 'Color Picker',
+        href: '/tools/color-picker',
+        desc: 'Native eyedropper & 10x pixel loupe',
+        icon: Pipette,
+    },
+    {
+        name: 'Rotate Image',
+        href: '/tools/rotate',
+        desc: '90°, 180°, 270° & custom angle rotation',
+        icon: RotateCw,
+    },
+    {
+        name: 'Flip Image',
+        href: '/tools/flip',
+        desc: 'Horizontal & vertical mirror reflection',
+        icon: FlipHorizontal,
+    },
 ];
 
-    const toggleMobileCategory = (category: string) => {
-        setExpandedMobileCategory(expandedMobileCategory === category ? null : category);
-    };
+export default function Header() {
+    const [toolsOpen, setToolsOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const MobileMenuItem = ({ label, items, category }: { label: string, items: typeof resizeTools, category: string }) => (
-        <div className="flex flex-col">
-            <button
-                onClick={() => toggleMobileCategory(category)}
-                className="flex items-center justify-between w-full px-4 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            >
-                {label}
-                <ChevronDown className={`w-4 h-4 transition-transform ${expandedMobileCategory === category ? 'rotate-180' : ''}`} />
-            </button>
-            {expandedMobileCategory === category && (
-                <div className="flex flex-col pl-4 mt-1 space-y-1">
-                    {items.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="block px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setToolsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
-        <header className="sticky top-0 z-50 glass border-b border-white/10">
+        <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-950/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-between h-14 sm:h-16">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-black to-blue-900 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                            <img src="/logo.png" alt="Logo" className="w-6 h-6 text-white" />
+                    <div className="flex items-center gap-6">
+                        <Link href="/" className="flex items-center gap-2.5 group">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                                <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
+                            </div>
+                            <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+                                ResizeMe
+                            </span>
+                        </Link>
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden md:flex items-center gap-1">
+                            {/* Unified Tools Dropdown */}
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    onClick={() => setToolsOpen(!toolsOpen)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${toolsOpen
+                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                                            : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                                        }`}
+                                >
+                                    <span>All Tools</span>
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${toolsOpen ? 'rotate-180 text-blue-600' : ''}`} />
+                                </button>
+
+                                {toolsOpen && (
+                                    <div className="absolute top-full left-0 mt-2 w-[520px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-3 grid grid-cols-2 gap-1 z-50 animate-fade-in">
+                                        {allTools.map((tool) => (
+                                            <Link
+                                                key={tool.href}
+                                                href={tool.href}
+                                                onClick={() => setToolsOpen(false)}
+                                                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors group"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                                                    <tool.icon className="w-4 h-4" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                        {tool.name}
+                                                    </div>
+                                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                        {tool.desc}
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <Link
+                                href="/tools/resize/bulk"
+                                className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg transition-colors"
+                            >
+                                Bulk Resize
+                            </Link>
+
+                            <Link
+                                href="/blog"
+                                className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg transition-colors"
+                            >
+                                Knowledge Hub
+                            </Link>
                         </div>
-                        <span className="text-xl font-bold gradient-text hidden sm:block">
-                            ResizeMe
-                        </span>
-                    </Link>
-
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-1">
-                        <DropdownMenu label="Resize" items={resizeTools} />
-                        <DropdownMenu label="Crop" items={cropTools} />
-                        <DropdownMenu label="Compress" items={compressTools} />
-                        <DropdownMenu label="Convert" items={convertTools} />
-                        <DropdownMenu label="More" items={moreTools} />
-                        <Link href="/blog" className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">Blog</Link>
                     </div>
 
-                    {/* Right side: Theme Toggle */}
-                    <div className="hidden md:flex items-center gap-3">
+                    {/* Right side Actions */}
+                    <div className="flex items-center gap-2">
                         <ThemeToggle />
-                    </div>
 
-                    {/* Mobile Menu Button + Theme Toggle */}
-                    <div className="md:hidden flex items-center gap-2">
-                        <ThemeToggle />
+                        {/* Mobile Menu Trigger */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                            aria-label="Toggle menu"
+                            className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            aria-label="Toggle navigation menu"
                         >
-                            {mobileMenuOpen ? (
-                                <X className="w-6 h-6" />
-                            ) : (
-                                <Menu className="w-6 h-6" />
-                            )}
+                            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden py-4 animate-fade-in border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 absolute left-0 right-0 px-4 shadow-xl border-b">
-                        <div className="flex flex-col gap-2 max-h-[80vh] overflow-y-auto">
-                            <MobileMenuItem label="Resize" items={resizeTools} category="resize" />
-                            <MobileMenuItem label="Crop" items={cropTools} category="crop" />
-                            <MobileMenuItem label="Compress" items={compressTools} category="compress" />
-                            <MobileMenuItem label="Convert" items={convertTools} category="convert" />
-                            <MobileMenuItem label="More Tools" items={moreTools} category="more" />
+                    <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-800 max-h-[80vh] overflow-y-auto space-y-4">
+                        <div className="grid grid-cols-1 gap-1">
+                            <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                Image Editing Tools
+                            </div>
+                            {allTools.map((tool) => (
+                                <Link
+                                    key={tool.href}
+                                    href={tool.href}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                >
+                                    <tool.icon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span className="font-medium">{tool.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1">
+                            <Link
+                                href="/blog"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
+                            >
+                                Knowledge Hub & Guides
+                            </Link>
+                            <Link
+                                href="/about"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
+                            >
+                                About ResizeMe
+                            </Link>
                         </div>
                     </div>
                 )}

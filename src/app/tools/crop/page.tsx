@@ -157,8 +157,6 @@ export default function CropPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="crop" />
         </>
     );
 }

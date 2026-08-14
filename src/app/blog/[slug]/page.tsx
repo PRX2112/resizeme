@@ -12,6 +12,18 @@ export async function generateStaticParams() {
   }));
 }
 
+// Helper to ensure full ISO-8601 datetime with timezone (e.g. 2026-06-15T00:00:00.000Z)
+function formatIsoDate(dateStr?: string): string {
+  if (!dateStr) return new Date().toISOString();
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString();
+    }
+  } catch {}
+  return `${dateStr}T00:00:00.000Z`;
+}
+
 // Generate dynamic metadata for each post
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -24,6 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const url = `https://resizeme.in/blog/${slug}`;
+  const isoDate = formatIsoDate(post.metadata.date);
 
   return {
     title: `${post.metadata.title} | ResizeMe Blog`,
@@ -36,7 +49,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: post.metadata.description,
       url,
       type: 'article',
-      publishedTime: post.metadata.date,
+      publishedTime: isoDate,
+      modifiedTime: isoDate,
       authors: post.metadata.author ? [post.metadata.author] : ['ResizeMe Team'],
       images: post.metadata.coverImage ? [{ url: post.metadata.coverImage }] : undefined,
     },
@@ -57,6 +71,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   }
 
   const postUrl = `https://resizeme.in/blog/${slug}`;
+  const isoDate = formatIsoDate(post.metadata.date);
 
   // Article JSON-LD Schema
   const articleSchema = {
@@ -64,8 +79,8 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
     '@type': 'Article',
     'headline': post.metadata.title,
     'description': post.metadata.description,
-    'datePublished': post.metadata.date,
-    'dateModified': post.metadata.date,
+    'datePublished': isoDate,
+    'dateModified': isoDate,
     'mainEntityOfPage': {
       '@type': 'WebPage',
       '@id': postUrl,

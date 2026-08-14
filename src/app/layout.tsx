@@ -4,7 +4,6 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import InteractiveDotsBackground from "@/components/ui/InteractiveDotsBackground";
 import { ENABLE_INTERACTIVE_BACKGROUND } from "@/config/ui";
@@ -82,20 +81,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-  const footerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_FOOTER_SLOT;
-  const adsEnabled =
-    process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' &&
-    Boolean(publisherId) &&
-    !publisherId?.includes('XXXX') &&
-    !publisherId?.includes('INSERT_');
-  const hasValidFooterSlot =
-    Boolean(footerAdSlot) &&
-    !footerAdSlot?.includes('XXXX') &&
-    !footerAdSlot?.includes('INSERT_');
+  const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED === 'true' && publisherId && !publisherId.includes('XXXX');
+  const footerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
+  const hasValidFooterSlot = footerAdSlot && !footerAdSlot.includes('XXXX');
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="ResizeMe" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -105,6 +102,13 @@ export default function RootLayout({
               name: "ResizeMe",
               url: "https://resizeme.in",
               logo: "https://resizeme.in/logo.png",
+              description:
+                "Free, private online image tools. Resize, crop, compress, and convert images locally in your browser with zero data uploads.",
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "handleresizeme@gmail.com",
+                contactType: "customer support",
+              },
             }),
           }}
         />
@@ -134,15 +138,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <Header />
-          <PWAInstallBanner />
           {ENABLE_INTERACTIVE_BACKGROUND && <InteractiveDotsBackground />}
           <main className="min-h-screen relative z-10">
             {children}
           </main>
 
           {adsEnabled && hasValidFooterSlot && footerAdSlot && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full border-t border-gray-100 dark:border-gray-800/50 mt-12 bg-gray-50/50 dark:bg-gray-900/20">
-              <div className="text-center text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">Advertisement</div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full mt-8">
               <AdBanner dataAdSlot={footerAdSlot} dataAdFormat="horizontal" />
             </div>
           )}

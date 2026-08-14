@@ -151,8 +151,6 @@ export default function RotatePage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="rotate" />
         </>
     );
 }

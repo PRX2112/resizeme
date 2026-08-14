@@ -11,11 +11,15 @@ import {
     Loader2,
     ArrowRight,
     CheckCircle,
+    Sliders,
+    Sparkles,
 } from 'lucide-react';
 import {
     ReactCompareSlider,
     ReactCompareSliderImage,
 } from 'react-compare-slider';
+import ToolRecommendations from '@/components/ToolRecommendations';
+import AdBanner from '@/components/AdBanner';
 
 interface CompressToolProps {
     defaultFormat?: string;
@@ -39,8 +43,8 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
         reset,
     } = useImageCompress();
 
-    // Usage tracking
-    const { usage, limits, canDownload, canProcessFile, trackDownload } = useUsageTracking();
+    const { limits, trackDownload } = useUsageTracking();
+    const contentAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT || process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
 
     const handleFileSelect = async (file: File) => {
         await loadFile(file);
@@ -48,13 +52,9 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
 
     const handleDownload = async () => {
         if (!compressedResult) return;
-
-
-
         const ext = compressedResult.format === 'jpeg' ? 'jpg' : compressedResult.format;
         downloadFile(compressedResult.image, `compressed-image.${ext}`);
 
-        // Track download
         if (originalFile) {
             await trackDownload(originalFile.size, 'Compress Tool', originalFile.name);
         }
@@ -65,128 +65,100 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
         : 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20 py-12">
-
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-950 dark:to-gray-900 py-6 sm:py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Header */}
-                <div className="text-center mb-12 animate-fade-in">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                        {title || (
-                            <>Image <span className="gradient-text">Compress</span></>
-                        )}
+                <div className="text-center">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                        {title || 'Image Compressor'}
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                        Reduce file size while maintaining the best possible quality
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl mx-auto">
+                        Reduce file size up to 90% with target KB controls or adaptive quality quantization.
                     </p>
                 </div>
 
+                {/* Main Workspace (Consistent 2-Column Grid: lg:grid-cols-12) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Live Canvas & Comparison Preview (lg:col-span-8) */}
+                    <div className="lg:col-span-8 space-y-4">
+                        {!originalFile ? (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+                                <FileUpload
+                                    onFileSelect={handleFileSelect}
+                                    accept="image/*"
+                                    maxSizeMB={limits.maxFileSize === Infinity ? Infinity : limits.maxFileSize / (1024 * 1024)}
+                                />
+                                {error && (
+                                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-xs text-center">
+                                        {error}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-5 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200">Comparing:</span>{' '}
+                                        Original vs Compressed Output
+                                    </div>
+                                    <button
+                                        onClick={reset}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Reset</span>
+                                    </button>
+                                </div>
 
+                                <div className="relative rounded-xl overflow-hidden bg-gray-950 min-h-[380px] max-h-[540px] flex items-center justify-center">
+                                    {previewUrl && compressedResult ? (
+                                        <ReactCompareSlider
+                                            itemOne={
+                                                <ReactCompareSliderImage
+                                                    src={previewUrl}
+                                                    alt="Original"
+                                                />
+                                            }
+                                            itemTwo={
+                                                <ReactCompareSliderImage
+                                                    src={compressedResult.image}
+                                                    alt="Compressed"
+                                                    style={{ opacity: isCompressing ? 0.5 : 1, transition: 'opacity 0.2s' }}
+                                                />
+                                            }
+                                            className="h-[500px] w-full object-contain"
+                                        />
+                                    ) : (
+                                        <div className="flex items-center justify-center text-white py-20">
+                                            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                                        </div>
+                                    )}
 
-                {!originalFile ? (
-                    <div className="max-w-2xl mx-auto animate-fade-in">
-                        <FileUpload
-                            onFileSelect={handleFileSelect}
-                            accept="image/*"
-                            maxSizeMB={limits.maxFileSize === Infinity ? Infinity : limits.maxFileSize / (1024 * 1024)}
-                        />
-                        {error && (
-                            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm text-center">
-                                {error}
+                                    <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
+                                        <span className="bg-black/75 text-white text-[11px] px-3 py-1 rounded-full backdrop-blur-sm">
+                                            Drag slider to inspect visual fidelity
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-                        {/* Left: Comparison View */}
-                        <div className="lg:col-span-2 space-y-6">
-                            <div className="card relative overflow-hidden p-0 bg-gray-900 min-h-[400px] flex items-center justify-center">
-                                {previewUrl && compressedResult ? (
-                                    <ReactCompareSlider
-                                        itemOne={
-                                            <ReactCompareSliderImage
-                                                src={previewUrl}
-                                                alt="Original"
-                                            />
-                                        }
-                                        itemTwo={
-                                            <ReactCompareSliderImage
-                                                src={compressedResult.image}
-                                                alt="Compressed"
-                                                style={{ opacity: isCompressing ? 0.5 : 1, transition: 'opacity 0.2s' }}
-                                            />
-                                        }
-                                        className="h-[600px] w-full object-contain"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center text-white">
-                                        <Loader2 className="w-8 h-8 animate-spin" />
-                                    </div>
-                                )}
 
-                                <div className="absolute top-4 right-4 z-10">
-                                    <button
-                                        onClick={reset}
-                                        className="btn btn-secondary shadow-lg py-2 px-4 text-sm"
-                                    >
-                                        <RotateCcw className="w-4 h-4 mr-2" />
-                                        Reset
-                                    </button>
-                                </div>
-                                <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-                                    <span className="bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                                        Drag slider to compare quality
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right: Controls & Stats */}
-                        <div className="space-y-6">
-                            {/* Stats Card */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Compression Stats
-                                </h3>
-
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <span className="text-gray-500 text-sm">Original Size</span>
-                                        <span className="font-medium">
-                                            {compressedResult ? formatFileSize(compressedResult.originalSize) : '...'}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-center">
-                                        <ArrowRight className="w-6 h-6 text-gray-400 rotate-90 lg:rotate-0" />
-                                    </div>
-
-                                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 rounded-lg">
-                                        <span className="text-green-700 dark:text-green-400 text-sm">New Size</span>
-                                        <div className="text-right">
-                                            <div className="font-bold text-green-700 dark:text-green-400">
-                                                {compressedResult ? formatFileSize(compressedResult.compressedSize) : '...'}
-                                            </div>
-                                            {savedPercentage > 0 && (
-                                                <div className="text-xs text-green-600 dark:text-green-500">
-                                                    Saved {savedPercentage}%
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Controls */}
-                            <div className="card space-y-4">
-                                {/* Compression Mode Selector */}
-                                <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    {/* Right Column: Consolidated Sidebar (lg:col-span-4) */}
+                    <div className="lg:col-span-4 space-y-4">
+                        <div className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-5 ${!originalFile ? 'opacity-50 pointer-events-none' : ''}`}>
+                            {/* Section 1: Compression Mode */}
+                            <div className="space-y-2">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Optimization Method
+                                </span>
+                                <div className="grid grid-cols-2 gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
                                     <button
                                         onClick={() => setMode('quality')}
-                                        className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                        className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
                                             mode === 'quality'
-                                                ? 'bg-primary text-white'
-                                                : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100'
+                                                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                                         }`}
                                     >
                                         Quality (%)
@@ -196,106 +168,139 @@ export default function CompressTool({ defaultFormat, title }: CompressToolProps
                                             setMode('targetSize');
                                             if (!targetKb) setTargetKb(100);
                                         }}
-                                        className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                        className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
                                             mode === 'targetSize'
-                                                ? 'bg-primary text-white'
-                                                : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100'
+                                                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                                         }`}
                                     >
-                                        Target Size (KB)
+                                        Target KB
                                     </button>
                                 </div>
+                            </div>
 
-                                {mode === 'quality' ? (
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                Image Quality
-                                            </label>
-                                            <span className="text-primary font-bold">{quality}%</span>
-                                        </div>
+                            {/* Section 2: Mode Specific Controls */}
+                            {mode === 'quality' ? (
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                                            Perceptual Quality
+                                        </span>
+                                        <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">
+                                            {quality}%
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="10"
+                                        max="95"
+                                        value={quality}
+                                        onChange={(e) => setQuality(Number(e.target.value))}
+                                        className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-gray-400">
+                                        <span>Max Compression (10%)</span>
+                                        <span>High Fidelity (95%)</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                                            Target File Size
+                                        </span>
+                                        <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">
+                                            {targetKb || 100} KB
+                                        </span>
+                                    </div>
 
+                                    {/* KB Presets */}
+                                    <div className="grid grid-cols-5 gap-1">
+                                        {[20, 50, 100, 200, 500].map((kb) => (
+                                            <button
+                                                key={kb}
+                                                onClick={() => setTargetKb(kb)}
+                                                className={`py-1 text-xs font-semibold rounded-md border transition-all ${
+                                                    targetKb === kb
+                                                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold'
+                                                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-blue-400'
+                                                }`}
+                                            >
+                                                {kb}k
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
                                         <input
-                                            type="range"
+                                            type="number"
                                             min="10"
-                                            max="95"
-                                            value={quality}
-                                            onChange={(e) => setQuality(Number(e.target.value))}
-                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                                            max="5000"
+                                            value={targetKb || ''}
+                                            onChange={(e) => setTargetKb(Number(e.target.value) || null)}
+                                            placeholder="Custom KB (e.g. 75)"
+                                            className="w-full px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-mono focus:ring-2 focus:ring-blue-500"
                                         />
-                                        <div className="flex justify-between text-xs text-gray-500">
-                                            <span>Smaller File (10%)</span>
-                                            <span>Maximum Quality (95%)</span>
+                                        <span className="text-xs text-gray-400 font-bold">KB</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Section 3: Compression Stats */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Compression Summary
+                                </span>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-800">
+                                        <div className="text-[10px] text-gray-400">Original</div>
+                                        <div className="font-semibold text-gray-900 dark:text-white mt-0.5">
+                                            {compressedResult ? formatFileSize(compressedResult.originalSize) : '—'}
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                Target File Size
-                                            </label>
-                                            <span className="text-primary font-bold font-mono">{targetKb || 100} KB</span>
+                                    <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">
+                                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400">New Size</div>
+                                        <div className="font-bold text-emerald-700 dark:text-emerald-300 mt-0.5">
+                                            {compressedResult ? formatFileSize(compressedResult.compressedSize) : '—'}
                                         </div>
-
-                                        {/* Quick KB Presets */}
-                                        <div className="grid grid-cols-5 gap-1.5">
-                                            {[20, 50, 100, 200, 500].map((kb) => (
-                                                <button
-                                                    key={kb}
-                                                    onClick={() => setTargetKb(kb)}
-                                                    className={`py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                                                        targetKb === kb
-                                                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary/50 text-gray-600 dark:text-gray-300'
-                                                    }`}
-                                                >
-                                                    {kb}KB
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        <div className="pt-2">
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="10"
-                                                    max="5000"
-                                                    value={targetKb || ''}
-                                                    onChange={(e) => setTargetKb(Number(e.target.value) || null)}
-                                                    placeholder="Custom KB (e.g. 50)"
-                                                    className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-mono focus:ring-2 focus:ring-primary"
-                                                />
-                                                <span className="text-xs text-gray-400 font-bold">KB</span>
-                                            </div>
-                                            <p className="text-[11px] text-gray-500 mt-1.5">
-                                                Automated binary search optimization targets your exact byte limit.
-                                            </p>
-                                        </div>
+                                    </div>
+                                </div>
+                                {savedPercentage > 0 && (
+                                    <div className="text-center text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 pt-1">
+                                        🎉 Reduced file size by {savedPercentage}%
                                     </div>
                                 )}
                             </div>
 
-                            {/* Download */}
+                            {/* Section 4: Action Button */}
                             <button
                                 onClick={handleDownload}
                                 disabled={isCompressing || !compressedResult}
-                                className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                             >
                                 {isCompressing ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                        Compressing...
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Compressing...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Download className="w-5 h-5 mr-2" />
-                                        Download Image
+                                        <Download className="w-4 h-4" />
+                                        <span>Download Compressed Image</span>
                                     </>
                                 )}
                             </button>
-
-
                         </div>
+                    </div>
+                </div>
+
+                {/* Related Tools Horizontal Pill Bar */}
+                <ToolRecommendations currentTool="compress" />
+
+                {/* In-Content Ad Placement */}
+                {contentAdSlot && (
+                    <div className="pt-2">
+                        <AdBanner dataAdSlot={contentAdSlot} dataAdFormat="horizontal" />
                     </div>
                 )}
             </div>

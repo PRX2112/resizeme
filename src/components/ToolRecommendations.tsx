@@ -7,8 +7,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 interface Tool {
     name: string;
     href: string;
-    description: string;
-    gradient: string;
+    description?: string;
 }
 
 interface ToolRecommendationsProps {
@@ -18,49 +17,53 @@ interface ToolRecommendationsProps {
 
 const allTools: Record<string, Tool[]> = {
     resize: [
-        { name: 'Compress Image', href: '/tools/compress', description: 'Reduce file size', gradient: 'from-orange-500 to-yellow-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
-        { name: 'Convert Format', href: '/tools/convert', description: 'Change image format', gradient: 'from-green-500 to-teal-500' },
+        { name: 'Compress Image', href: '/tools/compress' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Convert Format', href: '/tools/convert' },
+        { name: 'Bulk Resize (ZIP)', href: '/tools/resize/bulk' },
+        { name: 'Remove Background', href: '/tools/background-remover' },
     ],
     compress: [
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
-        { name: 'Convert Format', href: '/tools/convert', description: 'Change image format', gradient: 'from-green-500 to-teal-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
+        { name: 'Resize Image', href: '/tools/resize' },
+        { name: 'Convert Format', href: '/tools/convert' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Bulk Resize', href: '/tools/resize/bulk' },
     ],
     crop: [
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
-        { name: 'Rotate Image', href: '/tools/rotate', description: 'Fix orientation', gradient: 'from-indigo-500 to-purple-500' },
-        { name: 'Flip Image', href: '/tools/flip', description: 'Mirror your image', gradient: 'from-red-500 to-pink-500' },
+        { name: 'Resize Image', href: '/tools/resize' },
+        { name: 'Rotate Image', href: '/tools/rotate' },
+        { name: 'Flip Image', href: '/tools/flip' },
+        { name: 'Compress Image', href: '/tools/compress' },
     ],
     convert: [
-        { name: 'Compress Image', href: '/tools/compress', description: 'Reduce file size', gradient: 'from-orange-500 to-yellow-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
+        { name: 'Compress Image', href: '/tools/compress' },
+        { name: 'Resize Image', href: '/tools/resize' },
+        { name: 'Crop Image', href: '/tools/crop' },
     ],
     rotate: [
-        { name: 'Flip Image', href: '/tools/flip', description: 'Mirror your image', gradient: 'from-red-500 to-pink-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
+        { name: 'Flip Image', href: '/tools/flip' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Resize Image', href: '/tools/resize' },
     ],
     flip: [
-        { name: 'Rotate Image', href: '/tools/rotate', description: 'Fix orientation', gradient: 'from-indigo-500 to-purple-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
+        { name: 'Rotate Image', href: '/tools/rotate' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Resize Image', href: '/tools/resize' },
     ],
     enlarge: [
-        { name: 'Compress Image', href: '/tools/compress', description: 'Reduce file size', gradient: 'from-orange-500 to-yellow-500' },
-        { name: 'Convert Format', href: '/tools/convert', description: 'Change image format', gradient: 'from-green-500 to-teal-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
+        { name: 'Compress Image', href: '/tools/compress' },
+        { name: 'Convert Format', href: '/tools/convert' },
+        { name: 'Resize Image', href: '/tools/resize' },
     ],
     'meme-generator': [
-        { name: 'Color Picker', href: '/tools/color-picker', description: 'Extract colors', gradient: 'from-blue-500 to-cyan-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
+        { name: 'Color Picker', href: '/tools/color-picker' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Resize Image', href: '/tools/resize' },
     ],
     'color-picker': [
-        { name: 'Meme Generator', href: '/tools/meme-generator', description: 'Create memes', gradient: 'from-yellow-500 to-orange-500' },
-        { name: 'Crop Image', href: '/tools/crop', description: 'Trim your images', gradient: 'from-pink-500 to-rose-500' },
-        { name: 'Resize Image', href: '/tools/resize', description: 'Change dimensions', gradient: 'from-purple-500 to-blue-500' },
+        { name: 'Meme Generator', href: '/tools/meme-generator' },
+        { name: 'Crop Image', href: '/tools/crop' },
+        { name: 'Resize Image', href: '/tools/resize' },
     ],
 };
 
@@ -78,32 +81,22 @@ export default function ToolRecommendations({ currentTool, onToolClick }: ToolRe
     }
 
     return (
-        <div className="card mt-8 animate-fade-in">
-            <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    People Also Used
-                </h3>
+        <div className="py-4 border-t border-b border-gray-200/60 dark:border-gray-800/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold text-gray-500 dark:text-gray-400">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>Related Utilities:</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {recommendations.map((tool, index) => (
+            <div className="flex flex-wrap items-center gap-2">
+                {recommendations.map((tool) => (
                     <Link
                         key={tool.href}
                         href={tool.href}
                         onClick={onToolClick}
-                        className="group p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300 hover:shadow-lg animate-fade-in"
-                        style={{ animationDelay: `${index * 50}ms` }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors"
                     >
-                        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3`}>
-                            <ArrowRight className="w-6 h-6 text-white" />
-                        </div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:gradient-text transition-all">
-                            {tool.name}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {tool.description}
-                        </p>
+                        <span>{tool.name}</span>
+                        <ArrowRight className="w-3 h-3 text-gray-400" />
                     </Link>
                 ))}
             </div>

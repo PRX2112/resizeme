@@ -1,7 +1,7 @@
 # ResizeMe — Project Progress Document
 
 > **Last Updated**: 2026-08-14  
-> **Version**: 0.3.0  
+> **Version**: 0.4.0  
 > **Stack**: Next.js 16 (App Router / Turbopack) · React 19 · TypeScript · Tailwind CSS · Sharp · Drizzle ORM · Neon Serverless Postgres
 
 ---
@@ -10,9 +10,10 @@
 
 | Area | Status | Notes |
 |---|---|---|
+| **Standardized 2-Column Workspaces** | ✅ Complete | Unified desktop `lg:grid-cols-12` (8-col canvas, 4-col sidebar) across all 11 tools |
 | **Core Image Tools** | ✅ Complete | 5 sharp-backed tools + dual-engine bulk ZIP generator |
 | **Creative Tools** | ✅ Complete | 6 tools (Client Canvas, Eyedropper API, WASM AI segmentation) |
-| **AdSense Content Architecture** | ✅ Complete | Reusable `ToolContentSection` (600–1000+ words per tool) + dual JSON-LD schemas |
+| **AdSense Content Architecture** | ✅ Complete | Clean unboxed typography (`ToolContentSection`) + dual JSON-LD schemas |
 | **Vercel 4.5MB Upload Pipeline** | ✅ Complete | Client canvas downscaler (`clientImagePreprocess.ts`) + 413 early header checks |
 | **Edge-Case Backend & HEIC** | ✅ Complete | Target KB binary search, `heic2any` client decoding, 2048px Enlarge safety caps |
 | **UX & Core Web Vitals** | ✅ Complete | Dynamic WASM imports, Pointer Events touch drag, high-DPI Retina text rendering |
@@ -20,7 +21,7 @@
 | **Blog System (12 Posts)** | ✅ Complete | 12 evergreen technical guides (1,000+ words each) + `Article` & `BreadcrumbList` JSON-LD |
 | **Database & Visitor Counter** | ✅ Complete | Stateless HTTP connection pooling + `sessionStorage` write deduplication |
 | **Next.js 16 Proxy Architecture** | ✅ Complete | Migrated `src/middleware.ts` to `src/proxy.ts` + updated Browserslist DB |
-| **Legal & Compliance** | ✅ Complete | Privacy Policy, Terms, Disclaimer, Cookie Policy |
+| **Legal & Compliance** | ✅ Complete | Privacy Policy, Terms, Disclaimer, Cookie Policy, E-E-A-T About page |
 | **PWA Support** | ✅ Complete | Offline-ready manifest & install prompts |
 | **Cloud Storage (R2/S3)** | ❌ Pending | Optional temporary cloud file storage |
 | **Auth / User System** | ❌ Pending | NextAuth.js user accounts |
@@ -106,6 +107,13 @@
 - Migrated deprecated `src/middleware.ts` to `src/proxy.ts` (`export async function proxy(request: NextRequest)`).
 - Updated `caniuse-lite` database (`v1.0.30001809`) and `baseline-browser-mapping`.
 - Zero build-time or dev-time deprecation warnings across all 95 static routes.
+
+### 9. Utility-First UI Simplification (TinyPNG / Squoosh Model)
+- **Eliminated Visual Clutter & Popups**: Removed `BookmarkPrompt.tsx` popups and converted intrusive PWA modal banners into a quiet `PWAInstallButton` in the footer.
+- **Streamlined CSS & Dropdowns**: Replaced `framer-motion` in `DropdownMenu.tsx` and `ProcessingSpinner.tsx` with lightweight Tailwind transitions.
+- **Tool-First Layout**: Reduced top vertical spacing (`py-6 sm:py-8`) across all tools, ensuring the upload dropzone is immediately visible above the fold.
+- **Minimalist Header & Footer**: Unified all 11 tools into a clean megamenu dropdown in [`src/components/Header.tsx`](file:///d:/VibingSites/resizeme/src/components/Header.tsx) and built a compact 3-column footer in [`src/components/Footer.tsx`](file:///d:/VibingSites/resizeme/src/components/Footer.tsx).
+- **Preserved SEO & AdSense Integrity**: Retained all Schema.org JSON-LD schemas (`SoftwareApplication`, `FAQPage`, `Article`, `BreadcrumbList`, `Organization`) and 800–1000+ words of editorial copy per tool with compact typography and collapsible accordions.
 
 ---
 

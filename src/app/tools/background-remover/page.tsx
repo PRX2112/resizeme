@@ -152,8 +152,6 @@ export default function BackgroundRemoverPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="background-remover" />
         </>
     );
 }

@@ -153,8 +153,6 @@ export default function MemeGeneratorPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="meme-generator" />
         </>
     );
 }

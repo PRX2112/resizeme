@@ -155,8 +155,6 @@ export default function WatermarkPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="watermark" />
         </>
     );
 }

@@ -114,16 +114,20 @@ export function useImageTransform() {
                 canvas.toBlob((b) => resolve(b || undefined), mimeType, 0.95);
             });
 
-            setResult({
+            const transformResult = {
                 image: dataUrl,
                 width: newWidth,
                 height: newHeight,
                 blob,
-            });
+            };
+
+            setResult(transformResult);
+            return transformResult;
 
         } catch (err: any) {
             console.error('Client-side transform failed:', err);
             setError(err.message || 'Failed to transform image');
+            return undefined;
         } finally {
             setIsProcessing(false);
         }

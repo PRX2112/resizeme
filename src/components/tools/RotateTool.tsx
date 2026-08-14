@@ -9,9 +9,10 @@ import {
     RotateCcw,
     Loader2,
     RotateCw,
-    Save
 } from 'lucide-react';
-import { useUsageTracking } from '@/hooks/useUsageTracking';
+import ToolRecommendations from '@/components/ToolRecommendations';
+import AdBanner from '@/components/AdBanner';
+
 interface RotateToolProps {
     title?: string;
 }
@@ -30,215 +31,174 @@ export default function RotateTool({ title }: RotateToolProps) {
         loadFile,
         applyTransform,
         reset,
-        getPreviewStyle
+        getPreviewStyle,
     } = useImageTransform();
 
-    const [processedImageBlob, setProcessedImageBlob] = useState<Blob | null>(null);
-    const [processedFileName, setProcessedFileName] = useState<string>('');
+    const contentAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT || process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
 
-    const { usage } = useUsageTracking();
-
-    const handleSave = async () => {
-        await applyTransform();
-    };
-
-    const handleDownload = () => {
-        if (result) {
+    const handleApplyAndDownload = async () => {
+        const res = await applyTransform();
+        if (res?.image) {
             const ext = originalFile?.name.split('.').pop() || 'png';
             const baseName = originalFile?.name.substring(0, originalFile.name.lastIndexOf('.')) || 'image';
-            const filename = `${baseName}_rotated_${rotation}deg.${ext}`;
-            
-            downloadFile(result.image, filename);
-
-            if (result.blob) {
-                setProcessedImageBlob(result.blob);
-            }
-            setProcessedFileName(filename);
+            downloadFile(res.image, `${baseName}_rotated_${rotation}deg.${ext}`);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-teal-900/20 py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-950 dark:to-gray-900 py-6 sm:py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Header */}
-                <div className="text-center mb-12 animate-fade-in">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                        {title || (
-                            <>Rotate <span className="gradient-text">Image</span></>
-                        )}
+                <div className="text-center">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                        {title || 'Rotate Image'}
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                        Rotate your images to the perfect angle
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl mx-auto">
+                        Rotate photos by 90°, 180°, 270°, or fine-tune angles with custom sliders.
                     </p>
                 </div>
 
-                {!originalFile ? (
-                    <div className="max-w-2xl mx-auto animate-fade-in">
-                        <FileUpload
-                            onFileSelect={loadFile}
-                            accept="image/*"
-                        />
-                        {error && (
-                            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm text-center">
-                                {error}
+                {/* Main Workspace (Consistent 2-Column Grid: lg:grid-cols-12) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Canvas Preview (lg:col-span-8) */}
+                    <div className="lg:col-span-8 space-y-4">
+                        {!originalFile ? (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+                                <FileUpload
+                                    onFileSelect={loadFile}
+                                    accept="image/*"
+                                />
+                                {error && (
+                                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-xs text-center">
+                                        {error}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-                        {/* Left: View Area */}
-                        <div className="lg:col-span-2 space-y-6">
-                            <div className="card relative p-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center overflow-hidden min-h-[500px]">
-                                {result ? (
-                                    <img
-                                        src={result.image}
-                                        alt="Result"
-                                        className="max-h-[500px] max-w-full object-contain shadow-2xl rounded"
-                                    />
-                                ) : (
-                                    <div className="relative w-full h-full flex items-center justify-center p-8">
-                                        {previewUrl && (
+                        ) : (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-5 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200">Angle:</span>{' '}
+                                        {rotation}° degrees
+                                    </div>
+                                    <button
+                                        onClick={reset}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Reset</span>
+                                    </button>
+                                </div>
+
+                                <div className="relative rounded-xl overflow-hidden bg-gray-950 flex items-center justify-center p-8 min-h-[380px] max-h-[540px]">
+                                    {result ? (
+                                        <img
+                                            src={result.image}
+                                            alt="Rotated result"
+                                            className="max-h-[500px] max-w-full object-contain"
+                                        />
+                                    ) : (
+                                        previewUrl && (
                                             <img
                                                 src={previewUrl}
                                                 alt="Preview"
                                                 style={getPreviewStyle()}
-                                                className="max-h-[400px] max-w-full object-contain shadow-xl rounded transition-transform duration-300"
+                                                className="max-h-[460px] max-w-full object-contain transition-transform duration-300"
                                             />
-                                        )}
-                                    </div>
-                                )}
-
-                                <div className="absolute top-4 right-4 z-10">
-                                    <button
-                                        onClick={reset}
-                                        className="btn btn-secondary shadow-lg py-2 px-4 text-sm"
-                                    >
-                                        <RotateCcw className="w-4 h-4 mr-2" />
-                                        Reset
-                                    </button>
+                                        )
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Right: Controls */}
-                        <div className="space-y-6">
+                    {/* Right Column: Consolidated Sidebar (lg:col-span-4) */}
+                    <div className="lg:col-span-4 space-y-4">
+                        <div className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-5 ${!originalFile ? 'opacity-50 pointer-events-none' : ''}`}>
                             {/* Preset Buttons */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Presets
-                                </h3>
-                                <div className="grid grid-cols-3 gap-2">
+                            <div className="space-y-2">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Quick Rotate
+                                </span>
+                                <div className="grid grid-cols-2 gap-1.5">
                                     <button
                                         onClick={() => setRotation((r) => r - 90)}
-                                        className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex flex-col items-center justify-center"
+                                        className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 text-xs font-semibold flex items-center justify-center gap-1.5"
                                     >
-                                        <RotateCcw className="w-5 h-5 mb-1 text-gray-600 dark:text-gray-300" />
-                                        <span className="text-xs font-medium">-90°</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setRotation(0)}
-                                        className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex flex-col items-center justify-center"
-                                    >
-                                        <span className="text-lg font-bold text-gray-600 dark:text-gray-300">0°</span>
-                                        <span className="text-xs font-medium">Reset</span>
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>-90° Left</span>
                                     </button>
                                     <button
                                         onClick={() => setRotation((r) => r + 90)}
-                                        className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex flex-col items-center justify-center"
+                                        className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 text-xs font-semibold flex items-center justify-center gap-1.5"
                                     >
-                                        <RotateCw className="w-5 h-5 mb-1 text-gray-600 dark:text-gray-300" />
-                                        <span className="text-xs font-medium">+90°</span>
+                                        <RotateCw className="w-3.5 h-3.5" />
+                                        <span>+90° Right</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setRotation(180)}
+                                        className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 text-xs font-semibold"
+                                    >
+                                        180° Flip
+                                    </button>
+                                    <button
+                                        onClick={() => setRotation(0)}
+                                        className="py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 text-xs font-semibold"
+                                    >
+                                        0° Normal
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Custom Angle Slider */}
-                            <div className="card">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {/* Fine Angle Slider */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="font-semibold text-gray-700 dark:text-gray-300">
                                         Custom Angle
-                                    </h3>
-                                    <span className="text-primary font-bold font-mono">{rotation}°</span>
+                                    </span>
+                                    <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">
+                                        {rotation}°
+                                    </span>
                                 </div>
                                 <input
                                     type="range"
                                     min="-180"
                                     max="180"
-                                    value={rotation % 360} // Keep slider sane
+                                    value={rotation % 360}
                                     onChange={(e) => setRotation(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                                    className="w-full h-1.5 accent-blue-600"
                                 />
-                                <div className="flex justify-between text-xs text-gray-400 mt-2">
-                                    <span>-180°</span>
-                                    <span>0°</span>
-                                    <span>180°</span>
-                                </div>
                             </div>
 
-                            {/* Background Color (Optional) */}
-                            {rotation % 90 !== 0 && (
-                                <div className="card animate-fade-in">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                        Background Fill
-                                    </h3>
-                                    <div className="flex items-center space-x-4">
-                                        <input
-                                            type="color"
-                                            value={backgroundColor}
-                                            onChange={(e) => setBackgroundColor(e.target.value)}
-                                            className="h-10 w-20 rounded cursor-pointer"
-                                        />
-                                        <span className="text-sm font-mono text-gray-600 dark:text-gray-300">
-                                            {backgroundColor}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        Used to fill empty space when rotating at custom angles.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Action */}
-                            {!result ? (
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isProcessing}
-                                    className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/20"
-                                >
-                                    {isProcessing ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                            Rotating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="w-5 h-5 mr-2" />
-                                            Apply Rotation
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={handleDownload}
-                                        className="btn btn-primary w-full text-lg py-4 shadow-xl shadow-blue-500/20"
-                                    >
-                                        <Download className="w-5 h-5 mr-2" />
-                                        Download Result
-                                    </button>
-
-
-                                </>
-                            )}
-
-                            {error && (
-                                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm text-center">
-                                    {error}
-                                </div>
-                            )}
-
-
+                            {/* Action Button */}
+                            <button
+                                onClick={handleApplyAndDownload}
+                                disabled={isProcessing || !originalFile}
+                                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                            >
+                                {isProcessing ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Processing...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download className="w-4 h-4" />
+                                        <span>Apply & Download</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
+                    </div>
+                </div>
+
+                {/* Related Tools Horizontal Pill Bar */}
+                <ToolRecommendations currentTool="rotate" />
+
+                {/* In-Content Ad Placement */}
+                {contentAdSlot && (
+                    <div className="pt-2">
+                        <AdBanner dataAdSlot={contentAdSlot} dataAdFormat="horizontal" />
                     </div>
                 )}
             </div>

@@ -152,8 +152,6 @@ export default function FlipPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="flip" />
         </>
     );
 }

@@ -1,484 +1,302 @@
 'use client';
 
 import Link from 'next/link';
-import ToolCard from '@/components/ToolCard';
-import VisitorCounter from '@/components/VisitorCounter';
-import BeforeAfterSlider from '@/components/BeforeAfterSlider';
-import UltimateGuide from '@/components/sections/UltimateGuide';
-import TrustAndArchitecture from '@/components/sections/TrustAndArchitecture';
-import AdBanner from '@/components/AdBanner';
 import { useState } from 'react';
 import {
-  Maximize2, Crop, Minimize2, RefreshCw, Sparkles, Shield, Zap,
-  Smile, Pipette, RotateCw, FlipHorizontal, Maximize,
-  Users, Star, Clock, Lock, CheckCircle2, ChevronDown, ChevronUp,
-  ImageIcon, Eraser, Pencil, Cpu, ArrowRight
+  Sliders,
+  Layers,
+  Scissors,
+  Minimize2,
+  RefreshCw,
+  Eraser,
+  Maximize,
+  Pencil,
+  Smile,
+  Pipette,
+  RotateCw,
+  FlipHorizontal,
+  ShieldCheck,
+  Zap,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
 } from 'lucide-react';
+import UltimateGuide from '@/components/sections/UltimateGuide';
+import AdBanner from '@/components/AdBanner';
 
-const stats = [
-  { icon: Users, value: '10M+', label: 'Images Optimized' },
-  { icon: Star, value: '4.9/5', label: 'User Rating' },
-  { icon: Clock, value: '< 2s', label: 'Average Speed' },
-  { icon: Lock, value: '100%', label: 'Private & Secure' },
-];
-
-const secondaryTools = {
-  editing: [
-    {
-      icon: Crop, title: 'Image Crop', href: '/tools/crop',
-      description: 'Crop with precision. Choose preset aspect ratios or custom sizes.',
-      gradient: 'from-pink-500 to-rose-500',
-    },
-    {
-      icon: RotateCw, title: 'Rotate Image', href: '/tools/rotate',
-      description: 'Rotate by 90°, 180°, 270°, or custom angles. Fix orientation in seconds.',
-      gradient: 'from-indigo-500 to-purple-500',
-    },
-    {
-      icon: FlipHorizontal, title: 'Flip Image', href: '/tools/flip',
-      description: 'Flip horizontally or vertically. Create mirror effects with one click.',
-      gradient: 'from-red-500 to-pink-500',
-    },
-  ],
-  ai: [
-    {
-      icon: Eraser, title: 'Background Remover', href: '/tools/background-remover',
-      description: 'Remove image backgrounds in seconds using local/in-memory AI. Clean PNG exports.',
-      gradient: 'from-violet-500 to-purple-500', badge: 'Popular',
-      badgeColor: 'bg-green-400 text-green-900',
-    },
-    {
-      icon: Maximize, title: 'Image Enlarger', href: '/tools/enlarge',
-      description: 'Upscale images up to 4x with smart sharpening. AI-powered detail restoration.',
-      gradient: 'from-emerald-500 to-green-500',
-    },
-    {
-      icon: Pencil, title: 'Watermark Photo', href: '/tools/watermark',
-      description: 'Add text or image watermarks to protect your photos and personal identity.',
-      gradient: 'from-cyan-500 to-blue-500', badge: 'New',
-      badgeColor: 'bg-indigo-400 text-indigo-900',
-    },
-  ],
-  utilities: [
-    {
-      icon: ImageIcon, title: 'Bulk Resize', href: '/tools/resize/bulk',
-      description: 'Resize multiple images at once. Apply same settings and download as ZIP.',
-      gradient: 'from-sky-500 to-indigo-500', badge: 'Bulk',
-      badgeColor: 'bg-purple-400 text-purple-900',
-    },
-    {
-      icon: Smile, title: 'Meme Generator', href: '/tools/meme-generator',
-      description: 'Create viral memes with custom texts, sizes, fonts, and instant local exports.',
-      gradient: 'from-yellow-500 to-orange-500',
-    },
-    {
-      icon: Pipette, title: 'Color Picker', href: '/tools/color-picker',
-      description: 'Extract exact color palettes from any image in HEX, RGB, and HSL formats.',
-      gradient: 'from-blue-500 to-cyan-500',
-    },
-  ]
-};
-
-const useCases = [
-  { emoji: '✍️', role: 'Bloggers', desc: 'Optimized images for faster page loads and better SEO rankings.' },
-  { emoji: '📱', role: 'Social Media Managers', desc: 'Get perfect sizes for Instagram, Facebook, and YouTube.' },
-  { emoji: '💻', role: 'Web Developers', desc: 'Improve performance and Core Web Vitals with optimized assets.' },
-  { emoji: '🎨', role: 'Designers', desc: 'Convert formats and compress images without losing quality.' },
-  { emoji: '🎓', role: 'Students', desc: 'Quickly resize images for presentations and assignments.' },
-  { emoji: '🏢', role: 'Professionals', desc: 'Prepare images for reports, emails, and marketing materials.' },
+const coreTools = [
+  {
+    name: 'Image Resizer',
+    href: '/tools/resize',
+    badge: 'Popular',
+    desc: 'Scale exact pixel dimensions (W × H) or percentages with aspect ratio lock.',
+    icon: Sliders,
+    color: 'text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400',
+  },
+  {
+    name: 'Bulk Resizer (ZIP)',
+    href: '/tools/resize/bulk',
+    badge: 'Batch',
+    desc: 'Resize multiple images simultaneously and download as a single ZIP.',
+    icon: Layers,
+    color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-400',
+  },
+  {
+    name: 'Image Compressor',
+    href: '/tools/compress',
+    badge: 'Save 90%',
+    desc: 'Reduce file size to exact KB targets (50KB, 100KB, 200KB) with lossless clarity.',
+    icon: Minimize2,
+    color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400',
+  },
+  {
+    name: 'Format Converter',
+    href: '/tools/convert',
+    badge: 'HEIC Support',
+    desc: 'Convert between PNG, JPG, WebP, AVIF, GIF, and decode iPhone HEIC photos.',
+    icon: RefreshCw,
+    color: 'text-teal-600 bg-teal-50 dark:bg-teal-950/60 dark:text-teal-400',
+  },
+  {
+    name: 'Image Cropper',
+    href: '/tools/crop',
+    desc: 'Crop to standard ratios (16:9, 4:5, 1:1, 9:16) or custom freeform crops.',
+    icon: Scissors,
+    color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-400',
+  },
+  {
+    name: 'AI Background Remover',
+    href: '/tools/background-remover',
+    badge: 'WASM AI',
+    desc: 'Remove backgrounds and isolate subjects with in-browser neural segmentation.',
+    icon: Eraser,
+    color: 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-400',
+  },
+  {
+    name: 'Image Enlarger',
+    href: '/tools/enlarge',
+    desc: 'Upscale low-res images 2x or 4x with Lanczos3 sinc reconstruction filters.',
+    icon: Maximize,
+    color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-400',
+  },
+  {
+    name: 'Watermark Photo',
+    href: '/tools/watermark',
+    desc: 'Protect digital photos with custom text stamps, logo overlays, or 45° grids.',
+    icon: Pencil,
+    color: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950/60 dark:text-cyan-400',
+  },
+  {
+    name: 'Meme Generator',
+    href: '/tools/meme-generator',
+    desc: 'Create viral memes with Retina high-DPI text and mobile touch drag controls.',
+    icon: Smile,
+    color: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/60 dark:text-yellow-400',
+  },
+  {
+    name: 'Color Picker & Loupe',
+    href: '/tools/color-picker',
+    desc: 'Sample pixel colors with native EyeDropper API and a 10x magnifying loupe.',
+    icon: Pipette,
+    color: 'text-pink-600 bg-pink-50 dark:bg-pink-950/60 dark:text-pink-400',
+  },
+  {
+    name: 'Rotate Image',
+    href: '/tools/rotate',
+    desc: 'Rotate photos 90°, 180°, 270°, or adjust fine tilt with custom angle sliders.',
+    icon: RotateCw,
+    color: 'text-sky-600 bg-sky-50 dark:bg-sky-950/60 dark:text-sky-400',
+  },
+  {
+    name: 'Flip Image',
+    href: '/tools/flip',
+    desc: 'Mirror images horizontally or vertically in your browser with zero latency.',
+    icon: FlipHorizontal,
+    color: 'text-orange-600 bg-orange-50 dark:bg-orange-950/60 dark:text-orange-400',
+  },
 ];
 
 const faqs = [
   {
     q: 'Does resizing or compressing reduce image quality?',
-    a: 'Not with ResizeMe. Our smart lossy and lossless algorithms adjust file structures and remove redundant metadata, giving you huge size reductions (often up to 90%) with zero visible quality loss.',
+    a: 'Not with ResizeMe. Our lossy and lossless algorithms adjust file structures, quantize color palettes, and strip redundant metadata, giving you huge size reductions (often up to 90%) with zero visible quality loss.',
   },
   {
-    q: 'Are my images uploaded to any server?',
-    a: 'No. ResizeMe is designed as a privacy-first platform. Basic operations run entirely in your local browser sandbox. Advanced tasks (like AI background removal or specialized WebP conversion) process temporarily in secure, in-memory serverless functions that immediately discard the payload without saving or writing files. Your images remain private at all times.',
+    q: 'Are my images uploaded or stored on any server?',
+    a: 'No. ResizeMe is designed as a privacy-first platform. Basic operations run entirely on your device via the HTML5 Canvas API. Heavy tasks execute in ephemeral memory and are immediately discarded. Your private photos never stay on any server.',
   },
   {
     q: 'Is ResizeMe free to use?',
-    a: 'Yes, 100% free with no registration, no watermarks, no account limits, and no premium paywalls.',
+    a: 'Yes, 100% free with no registration, no watermarks, and no usage limits.',
   },
   {
     q: 'Does it support bulk processing?',
-    a: 'Yes! Use our Bulk Resize tool to drag and drop multiple images at once, apply identical dimension scale constraints, and download everything grouped as a compressed ZIP file.',
+    a: 'Yes! Use our Bulk Resize tool to drag and drop multiple images at once, apply unified dimensions or percentages, and download everything as a ZIP archive.',
+  },
+  {
+    q: 'What image formats are supported?',
+    a: 'ResizeMe supports PNG, JPEG, JPG, WebP, AVIF, GIF, SVG, and iPhone HEIC/HEIF files directly in the browser.',
   },
 ];
 
-function FAQ() {
-  const [open, setOpen] = useState<number | null>(0);
-  return (
-    <div className="space-y-3">
-      {faqs.map((faq, i) => (
-        <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200">
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex justify-between items-center p-5 text-left"
-          >
-            <h3 className="font-semibold text-gray-900 dark:text-white pr-4 text-base md:text-lg">{faq.q}</h3>
-            {open === i
-              ? <ChevronUp className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-              : <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />}
-          </button>
-          {open === i && (
-            <div className="px-5 pb-5 text-gray-600 dark:text-gray-300 animate-fade-in text-sm md:text-base leading-relaxed">
-              {faq.a}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function Home() {
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const contentAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT || process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
+
+  // Structured Data (JSON-LD) for Schema.org FAQPage compliance
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.a,
+      },
+    })),
+  };
+
   return (
-    <div className="relative overflow-hidden bg-white dark:bg-gray-950">
+    <div className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      {/* Schema.org FAQ JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden">
-        {/* Glow Spheres */}
-        <div className="absolute top-10 left-1/4 w-96 h-96 bg-purple-400/20 dark:bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-20 right-1/4 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" style={{ animationDelay: '1s' }} />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center space-y-6 max-w-4xl mx-auto">
-            {/* Trust Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs md:text-sm font-semibold tracking-wide animate-fade-in">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              100% Secure · On-Device Processing · Free Forever
-            </div>
-
-            {/* Premium Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-[1.1] animate-fade-in">
-              <span className="block mb-2">Optimize Your Images</span>
-              <span className="block bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent shimmer-text pb-1">
-                With Absolute Privacy
-              </span>
-            </h1>
-
-            {/* Value Proposition Tagline */}
-            <p className="max-w-2xl mx-auto text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-              Private image tools that run entirely on your device.
-              <span className="block font-normal text-sm sm:text-base mt-2 text-gray-500">
-                No slow uploads, no server storage, and no tracking. Process, resize, and compress your private digital assets in milliseconds directly in your browser.
-              </span>
-            </p>
+      {/* ─── Streamlined Minimalist Hero ─── */}
+      <section className="pt-10 pb-8 sm:pt-14 sm:pb-10 border-b border-gray-100 dark:border-gray-900">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+          {/* 3 Subtle Badges */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+              <Lock className="w-3.5 h-3.5" /> 100% Client-Side
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+              <ShieldCheck className="w-3.5 h-3.5" /> Zero Server Uploads
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
+              <Zap className="w-3.5 h-3.5" /> Free & No Sign-up
+            </span>
           </div>
 
-          {/* ─── 3 Primary CTAs Above Fold ─── */}
-          <div className="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {/* CTA 1: Resize */}
-            <Link href="/tools/resize" className="group block relative rounded-2xl p-0.5 transition-all duration-300 hover:scale-[1.02]">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 rounded-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-300 blur-sm group-hover:blur-md" />
-              <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 h-full flex flex-col justify-between border border-white/20">
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <Maximize2 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Resize Image</h3>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Scale image heights and widths instantly using exact pixel dimensions or relative percentage settings.
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            Free, Private <span className="text-blue-600 dark:text-blue-400">Image Tools</span>
+          </h1>
+
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Resize, compress, convert, crop, and edit digital images directly in your browser. Fast, lossless, and 100% secure.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Primary 12-Tool Launchpad Grid (Direct 1-Click Access) ─── */}
+      <section className="py-10 sm:py-12 border-b border-gray-100 dark:border-gray-900 bg-gray-50/40 dark:bg-gray-900/20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Select an Image Utility
+            </h2>
+            <Link
+              href="/tools/resize/bulk"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+            >
+              <span>Batch Mode</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {coreTools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-blue-500/50 hover:shadow-md transition-all group flex flex-col justify-between"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold ${tool.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      {tool.badge && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                          {tool.badge}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {tool.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {tool.desc}
                     </p>
                   </div>
-                </div>
-                <div className="mt-6 flex items-center gap-2 font-bold text-purple-600 dark:text-purple-400 group-hover:translate-x-1.5 transition-transform duration-300 text-sm">
-                  Start Resizing <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-            </Link>
 
-            {/* CTA 2: Compress */}
-            <Link href="/tools/compress" className="group block relative rounded-2xl p-0.5 transition-all duration-300 hover:scale-[1.02]">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-300 blur-sm group-hover:blur-md" />
-              <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 h-full flex flex-col justify-between border border-white/20">
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center">
-                    <Minimize2 className="w-6 h-6" />
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                    <span>Launch Tool</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Compress Image</h3>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Reduce raw image file size up to 90% while retaining full visual clarity using MozJPEG & WebP algorithms.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 flex items-center gap-2 font-bold text-pink-600 dark:text-pink-400 group-hover:translate-x-1.5 transition-transform duration-300 text-sm">
-                  Start Compressing <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-            </Link>
-
-            {/* CTA 3: Convert */}
-            <Link href="/tools/convert" className="group block relative rounded-2xl p-0.5 transition-all duration-300 hover:scale-[1.02]">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-300 blur-sm group-hover:blur-md" />
-              <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 h-full flex flex-col justify-between border border-white/20">
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 animate-spin-slow" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Convert Image</h3>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Swap formats in one click. Convert PNG to WebP, JPEG to PNG, SVG, or crop HEIC files without data leaks.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1.5 transition-transform duration-300 text-sm">
-                  Start Converting <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          {/* ─── Premium Glassmorphic Trust Strip ─── */}
-          <div className="mt-12 md:mt-16 glass rounded-2xl p-6 border border-gray-200/50 dark:border-gray-800/50 max-w-5xl mx-auto shadow-xl">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 items-center divide-y lg:divide-y-0 lg:divide-x divide-gray-200/50 dark:divide-gray-800/50">
-              {/* Trust Strip Item 1 */}
-              <div className="flex items-start gap-4 p-2">
-                <div className="bg-purple-100 dark:bg-purple-950/40 p-2.5 rounded-xl text-purple-600 dark:text-purple-400 flex-shrink-0">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base">No Uploads</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Processed locally or in-memory, never stored.</p>
-                </div>
-              </div>
-
-              {/* Trust Strip Item 2 */}
-              <div className="flex items-start gap-4 p-2 pt-4 lg:pt-0 lg:pl-6">
-                <div className="bg-indigo-100 dark:bg-indigo-950/40 p-2.5 rounded-xl text-indigo-600 dark:text-indigo-400 flex-shrink-0">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base">Browser-Based</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Bypasses server latency via client-side engines.</p>
-                </div>
-              </div>
-
-              {/* Trust Strip Item 3 */}
-              <div className="flex items-start gap-4 p-2 pt-4 lg:pt-0 lg:pl-6">
-                <div className="bg-emerald-100 dark:bg-emerald-950/40 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base">Free Forever</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">No premium limits or account registration required.</p>
-                </div>
-              </div>
-
-              {/* Trust Strip Item 4 */}
-              <div className="flex items-start gap-4 p-2 pt-4 lg:pt-0 lg:pl-6">
-                <div className="bg-pink-100 dark:bg-pink-950/40 p-2.5 rounded-xl text-pink-600 dark:text-pink-400 flex-shrink-0">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base">Fast Processing</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Get optimized high-quality results in sub-2 seconds.</p>
-                </div>
-              </div>
-            </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ─── Stats Bar ─── */}
-      <section className="py-12 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 shadow-inner relative z-10">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {stats.map((s, i) => (
-              <div key={i} className="text-white animate-count-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <s.icon className="w-7 h-7 mx-auto mb-2 opacity-80 text-white/90" />
-                <div className="text-3xl font-bold tracking-tight">{s.value}</div>
-                <div className="text-xs uppercase font-semibold tracking-wider opacity-70 mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* ─── Clean AdSense In-Content Placement (Zero CLS) ─── */}
+      {contentAdSlot && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <AdBanner dataAdSlot={contentAdSlot} dataAdFormat="horizontal" />
         </div>
-      </section>
+      )}
 
-      {/* ─── Categorized More Specialized Tools Section ─── */}
-      <section id="more-tools" className="py-20 bg-gray-50/50 dark:bg-gray-950/30 relative z-10 border-b border-gray-100 dark:border-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-              More Specialized Image Tools
-            </h2>
-            <p className="mt-4 text-base sm:text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-              Explore secondary processing utility kits designed for specific adjustments, quick formats, and custom assets. Everything is optimized to run locally in-browser or safely in ephemeral memory.
-            </p>
-          </div>
-
-          <div className="space-y-12">
-            {/* Category 1: Precision & Aspect Adjustments */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
-                <span className="h-2 w-2 rounded-full bg-pink-500" />
-                Precision & Aspect Adjustments
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {secondaryTools.editing.map((tool, index) => (
-                  <div key={tool.title} className="animate-slide-in-up" style={{ animationDelay: `${index * 60}ms` }}>
-                    <ToolCard {...tool} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Category 2: AI Utilities & Watermarking */}
-            <div className="space-y-6 pt-6">
-              <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
-                <span className="h-2 w-2 rounded-full bg-violet-500" />
-                AI Utilities & Enhancements
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {secondaryTools.ai.map((tool, index) => (
-                  <div key={tool.title} className="animate-slide-in-up" style={{ animationDelay: `${index * 60}ms` }}>
-                    <ToolCard {...tool} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Category 3: Bulk Processing & Web Tools */}
-            <div className="space-y-6 pt-6">
-              <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
-                <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                Productivity & Web Utilities
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {secondaryTools.utilities.map((tool, index) => (
-                  <div key={tool.title} className="animate-slide-in-up" style={{ animationDelay: `${index * 60}ms` }}>
-                    <ToolCard {...tool} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Before / After Section ─── */}
-      <section className="py-20 bg-white dark:bg-gray-950 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-              See the Optimization Difference
-            </h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-              Drag the interactive slider to compare original photos with compressed ones side-by-side.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <BeforeAfterSlider
-                beforeSrc="/before.jpg"
-                afterSrc="/after.jpg"
-                beforeLabel="Original RAW"
-                beforeSubLabel="2.4 MB"
-                afterLabel="Optimized"
-                afterSubLabel="210 KB (91% Saved)"
-              />
-              <p className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                👆 Drag the visual slider to inspect visual fidelity
-              </p>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                91% File Size Reduction — Visually Identical
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                Our smart compression engine applies perceptual encoding and strips hidden, heavy metadata, shrinking files dramatically while preserving every visible pixel exactly as your eyes see them.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Web pages and assets load 10× faster',
-                  'Higher Google PageSpeed & Core Web Vitals scores',
-                  'Frees up disk space and system memory limits',
-                  'Fast downloads and instant sharing capabilities',
-                ].map(item => (
-                  <li key={item} className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a href="/tools/compress" className="btn btn-primary inline-flex text-base mt-2">
-                Try Image Compressor Now →
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Who Uses ResizeMe ─── */}
-      <section className="py-20 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-gray-950 dark:to-gray-900 relative z-10 border-y border-gray-100 dark:border-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-              Designed for Creators & Professionals
-            </h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              ResizeMe handles massive web compression and scaling workflows for users demanding both security and speed.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {useCases.map((uc, i) => (
-              <div key={uc.role} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100/85 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="text-3xl mb-3">{uc.emoji}</div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{uc.role}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{uc.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Guides & Resources ─── */}
-      <section className="py-20 bg-white dark:bg-gray-950 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Learn Image Optimization</h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Master digital assets and web performance with our complete user resources.</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Link href="/what-is-image-resizing" className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all hover:-translate-y-1">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">What is Image Resizing?</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Learn how resizing differs from cropping and physical compression ratios.</p>
-            </Link>
-            <Link href="/why-image-optimization-matters" className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all hover:-translate-y-1">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Why Optimization Matters</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Discover optimization impacts on organic Google rankings and UX bounce rates.</p>
-            </Link>
-            <Link href="/social-media-image-sizes" className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all hover:-translate-y-1">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Social Media Dimensions</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Detailed templates for perfect Instagram sizes, YouTube cards, and banners.</p>
-            </Link>
-            <Link href="/image-format-guide" className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all hover:-translate-y-1">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Image Format Guide</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">JPEG vs PNG vs WebP vs SVG. Learn exactly which format to select and when.</p>
-            </Link>
-          </div>
-        </div>
-      </section>
-
+      {/* ─── AdSense Editorial Authority: Complete Ultimate Guide ─── */}
       <UltimateGuide />
 
-      <TrustAndArchitecture />
-
-      {/* ─── FAQ ─── */}
-      <section id="faq" className="py-20 bg-gray-50/50 dark:bg-gray-900/30 relative z-10 border-t border-gray-100 dark:border-gray-900 scroll-mt-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>
+      {/* ─── Frequently Asked Questions (Accordion) ─── */}
+      <section id="faq" className="py-14 border-t border-gray-100 dark:border-gray-900 scroll-mt-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Clear answers to common questions about our browser-based image toolkit.
+            </p>
           </div>
-          <FAQ />
+
+          <div className="space-y-3">
+            {faqs.map((faq, i) => {
+              const isOpen = openFaqIndex === i;
+              return (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors"
+                >
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : i)}
+                    className="w-full flex justify-between items-center p-4 sm:p-5 text-left font-semibold text-gray-900 dark:text-white text-sm sm:text-base hover:text-blue-600 transition-colors"
+                  >
+                    <span>{faq.q}</span>
+                    {isOpen ? (
+                      <ChevronUp className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-3">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
     </div>

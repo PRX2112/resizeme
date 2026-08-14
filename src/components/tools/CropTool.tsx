@@ -17,14 +17,16 @@ import {
     X,
     Plus,
 } from 'lucide-react';
+import ToolRecommendations from '@/components/ToolRecommendations';
+import AdBanner from '@/components/AdBanner';
 
 const ASPECT_RATIOS = [
-    { label: 'Free', value: undefined, icon: Maximize },
-    { label: 'Square (1:1)', value: 1 / 1, icon: Square },
-    { label: 'Landscape (16:9)', value: 16 / 9, icon: Monitor },
-    { label: 'Portrait (4:5)', value: 4 / 5, icon: Smartphone },
-    { label: 'Mobile (9:16)', value: 9 / 16, icon: Smartphone },
-    { label: 'Standard (4:3)', value: 4 / 3, icon: Monitor },
+    { label: 'Freeform', value: undefined, icon: Maximize },
+    { label: '1:1 Square', value: 1 / 1, icon: Square },
+    { label: '16:9 Landscape', value: 16 / 9, icon: Monitor },
+    { label: '4:5 Portrait', value: 4 / 5, icon: Smartphone },
+    { label: '9:16 Story', value: 9 / 16, icon: Smartphone },
+    { label: '4:3 Standard', value: 4 / 3, icon: Monitor },
 ];
 
 const FORMATS = [
@@ -38,7 +40,6 @@ interface CropToolProps {
     title?: string;
 }
 
-// Helper to center the crop when image loads or aspect changes
 function centerAspectCrop(
     mediaWidth: number,
     mediaHeight: number,
@@ -75,8 +76,6 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
     const [aspect, setAspect] = useState<number | undefined>(undefined);
     const [format, setFormat] = useState(defaultFormat);
     const imgRef = useRef<HTMLImageElement>(null);
-    const [processedImageBlob, setProcessedImageBlob] = useState<Blob | null>(null);
-    const [processedFileName, setProcessedFileName] = useState<string>('');
 
     // Custom Saved Aspect Ratios State
     const [customAspects, setCustomAspects] = useState<{ name: string; value: number }[]>([]);
@@ -84,7 +83,9 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
     const [newAspectW, setNewAspectW] = useState<number>(0);
     const [newAspectH, setNewAspectH] = useState<number>(0);
 
-    // Load local custom aspect presets and favorite formats
+    const { limits, trackDownload } = useUsageTracking();
+    const contentAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CONTENT || process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER;
+
     useEffect(() => {
         try {
             const stored = localStorage.getItem('resizeme_custom_aspects');
@@ -104,7 +105,7 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
         if (!newAspectName.trim() || !newAspectW || !newAspectH) return;
         const newRatio = {
             name: `${newAspectName.trim()} (${newAspectW}:${newAspectH})`,
-            value: newAspectW / newAspectH
+            value: newAspectW / newAspectH,
         };
         const updated = [...customAspects, newRatio];
         setCustomAspects(updated);
@@ -120,144 +121,102 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
         localStorage.setItem('resizeme_custom_aspects', JSON.stringify(updated));
     };
 
-    const handleFormatChange = (fmt: string) => {
-        setFormat(fmt);
-        localStorage.setItem('resizeme_fav_format', fmt);
+    const handleFormatChange = (newFormat: string) => {
+        setFormat(newFormat);
+        try {
+            localStorage.setItem('resizeme_fav_format', newFormat);
+        } catch (e) {
+            console.error('Failed to save format:', e);
+        }
     };
 
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                handleReset();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                if (!isProcessing && completedCrop && imgRef.current) {
-                    handleDownload();
-                }
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
-                e.preventDefault();
-                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                if (fileInput) {
-                    fileInput.click();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [completedCrop, isProcessing, originalFile]);
-
-    // Usage tracking
-    const { usage, limits, canDownload, canProcessFile, trackDownload } = useUsageTracking();
-
     const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const { width, height } = e.currentTarget;
         if (aspect) {
-            const { width, height } = e.currentTarget;
             setCrop(centerAspectCrop(width, height, aspect));
         } else {
-            // Default to full width crop for freeform
-            const { width, height } = e.currentTarget;
             setCrop({
                 unit: '%',
+                x: 5,
+                y: 5,
                 width: 90,
                 height: 90,
-                x: 5,
-                y: 5
             });
+        }
+    };
+
+    const handleAspectRatioChange = (newAspect: number | undefined) => {
+        setAspect(newAspect);
+        if (imgRef.current && newAspect) {
+            const { width, height } = imgRef.current;
+            setCrop(centerAspectCrop(width, height, newAspect));
         }
     };
 
     const handleFileSelect = async (file: File) => {
         await loadImageFile(file);
-        setCrop(undefined);
-        setCompletedCrop(undefined);
-        setAspect(undefined);
-    };
-
-    const handleAspectRatioChange = (newAspect: number | undefined) => {
-        setAspect(newAspect);
-
-        if (imgRef.current && newAspect) {
-            const { width, height } = imgRef.current;
-            setCrop(centerAspectCrop(width, height, newAspect));
-        } else if (imgRef.current && !newAspect) {
-            // Reset to a default free crop if switching to free
-            setCrop({
-                unit: '%',
-                width: 50,
-                height: 50,
-                x: 25,
-                y: 25
-            });
-        }
     };
 
     const handleDownload = async () => {
-        if (!completedCrop || !imgRef.current) return;
+        if (!imgRef.current || !completedCrop || !originalFile) return;
 
-
-
-        // The completedCrop contains coordinates relative to the DISPLAYED image size.
-        // We need to scale them to the ORIGINAL image natural size for the server.
         const image = imgRef.current;
         const scaleX = image.naturalWidth / image.width;
         const scaleY = image.naturalHeight / image.height;
 
-        const serverCrop = {
-            x: completedCrop.x * scaleX,
-            y: completedCrop.y * scaleY,
-            width: completedCrop.width * scaleX,
-            height: completedCrop.height * scaleY,
-        };
+        const cropX = Math.round(completedCrop.x * scaleX);
+        const cropY = Math.round(completedCrop.y * scaleY);
+        const cropWidth = Math.max(1, Math.round(completedCrop.width * scaleX));
+        const cropHeight = Math.max(1, Math.round(completedCrop.height * scaleY));
 
-        // Call crop API and get result
-        const base64 = originalFile ? await (async () => {
-            return new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(originalFile);
-            });
-        })() : '';
+        const canvas = document.createElement('canvas');
+        canvas.width = cropWidth;
+        canvas.height = cropHeight;
+        const ctx = canvas.getContext('2d');
 
-        const response = await fetch('/api/crop', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                image: base64,
-                crop: serverCrop,
-                rotate: 0,
-                format,
-            }),
-        });
+        if (!ctx) return;
 
-        if (response.ok) {
-            const result = await response.json();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-            // Convert base64 to blob for Drive save
-            const base64Data = result.image.split(',')[1];
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: `image/${format}` });
-            const filename = `cropped-image.${format === 'jpg' ? 'jpg' : format}`;
+        const mimeType = format === 'jpg' || format === 'jpeg' ? 'image/jpeg' : `image/${format}`;
 
-            // Download
-            const link = document.createElement('a');
-            link.href = result.image;
-            link.download = filename;
-            link.click();
-
-            // Store for Drive save
-            setProcessedImageBlob(blob);
-            setProcessedFileName(filename);
+        if (mimeType === 'image/jpeg') {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, cropWidth, cropHeight);
         }
 
-        // Track download
+        ctx.drawImage(
+            image,
+            cropX,
+            cropY,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+        );
+
+        const blob = await new Promise<Blob | null>((resolve) => {
+            canvas.toBlob((b) => resolve(b), mimeType, 0.92);
+        });
+
+        if (blob) {
+            const originalName = originalFile.name || 'image';
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+            const filename = `${nameWithoutExt}_cropped_${cropWidth}x${cropHeight}.${format}`;
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         if (originalFile) {
             await trackDownload(originalFile.size, 'Crop Tool', originalFile.name);
         }
@@ -271,190 +230,181 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20 py-12">
-
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-950 dark:to-gray-900 py-6 sm:py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Header */}
-                <div className="text-center mb-12 animate-fade-in">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                        {title || (
-                            <>Image <span className="gradient-text">Crop</span></>
-                        )}
+                <div className="text-center">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                        {title || 'Image Cropper'}
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                        Crop your images to exact dimensions or common aspect ratios
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl mx-auto">
+                        Crop photos to exact aspect ratios (16:9, 4:5, 1:1) or custom freeform boundaries.
                     </p>
                 </div>
 
-
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left: Cropper / Upload */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {!originalFile && (
-                            <div className="animate-fade-in">
+                {/* Main Workspace (Consistent 2-Column Grid: lg:grid-cols-12) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Interactive Crop Canvas (lg:col-span-8) */}
+                    <div className="lg:col-span-8 space-y-4">
+                        {!originalFile ? (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                                 <FileUpload
                                     onFileSelect={handleFileSelect}
                                     accept="image/*"
                                     maxSizeMB={limits.maxFileSize === Infinity ? Infinity : limits.maxFileSize / (1024 * 1024)}
                                 />
+                                {error && (
+                                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-xs text-center">
+                                        {error}
+                                    </div>
+                                )}
                             </div>
-                        )}
-
-                        {originalFile && previewUrl && (
-                            <div className="card animate-fade-in relative flex flex-col min-h-[500px]">
-                                <div className="absolute top-4 right-4 z-10">
+                        ) : (
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-5 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200">Crop Mode:</span>{' '}
+                                        {aspect ? 'Aspect Ratio Locked' : 'Freeform Selection'}
+                                    </div>
                                     <button
                                         onClick={handleReset}
-                                        className="btn btn-secondary shadow-lg py-2 px-4 text-sm"
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                                     >
-                                        <RotateCcw className="w-4 h-4 mr-2" />
-                                        Reset
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Reset</span>
                                     </button>
                                 </div>
 
-                                <div className="relative flex-1 rounded-lg overflow-hidden bg-gray-900 flex items-center justify-center p-4">
+                                <div className="relative rounded-xl overflow-hidden bg-gray-950 flex items-center justify-center p-4 min-h-[380px] max-h-[540px]">
                                     <ReactCrop
                                         crop={crop}
                                         onChange={(_, percentCrop) => setCrop(percentCrop)}
                                         onComplete={(c) => setCompletedCrop(c)}
                                         aspect={aspect}
-                                        className="max-h-[600px]"
+                                        className="max-h-[500px]"
                                     >
                                         <img
                                             ref={imgRef}
-                                            src={previewUrl}
+                                            src={previewUrl || ''}
                                             alt="Crop preview"
                                             onLoad={onImageLoad}
-                                            style={{ maxHeight: '600px', width: 'auto', maxWidth: '100%' }}
+                                            style={{ maxHeight: '500px', width: 'auto', maxWidth: '100%' }}
                                         />
                                     </ReactCrop>
                                 </div>
-
-                                <div className="mt-4 px-2 text-center text-sm text-gray-500">
-                                    Draft handles to resize selection. {aspect ? 'Aspect ratio locked.' : 'Free selection active.'}
-                                </div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
-                                {error}
                             </div>
                         )}
                     </div>
 
-                    {/* Right: Controls */}
-                    {originalFile && (
-                        <div className="space-y-6 animate-fade-in">
+                    {/* Right Column: Consolidated Sidebar (lg:col-span-4) */}
+                    <div className="lg:col-span-4 space-y-4">
+                        <div className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm space-y-5 ${!originalFile ? 'opacity-50 pointer-events-none' : ''}`}>
                             {/* Aspect Ratios */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                    Aspect Ratio
-                                </h3>
-                                <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-2">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Aspect Ratios
+                                </span>
+                                <div className="grid grid-cols-2 gap-1.5">
                                     {ASPECT_RATIOS.map((ratio) => (
                                         <button
                                             key={ratio.label}
                                             onClick={() => handleAspectRatioChange(ratio.value)}
-                                            className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${aspect === ratio.value
-                                                ? 'border-primary bg-primary/5 text-primary'
-                                                : 'border-gray-200 dark:border-gray-700 hover:border-primary/50 text-gray-700 dark:text-gray-300'
-                                                }`}
+                                            className={`p-2 rounded-lg border text-left text-xs font-medium transition-all ${
+                                                aspect === ratio.value
+                                                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold'
+                                                    : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-400'
+                                            }`}
                                         >
-                                            <ratio.icon className="w-4 h-4" />
-                                            <span className="text-sm font-medium">{ratio.label}</span>
+                                            <div className="truncate">{ratio.label}</div>
                                         </button>
                                     ))}
                                 </div>
 
-                                {/* Custom Aspect Ratios List */}
+                                {/* Custom Aspect Ratios */}
                                 {customAspects.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                        <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
-                                            Custom Aspect Ratios
-                                        </h4>
-                                        <div className="space-y-2">
+                                    <div className="pt-2 space-y-1">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">My Ratios</span>
+                                        <div className="flex flex-wrap gap-1">
                                             {customAspects.map((ratio, index) => (
-                                                <div 
+                                                <div
                                                     key={index}
-                                                    className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800/50"
+                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/50 text-[11px] text-indigo-700 dark:text-indigo-300"
                                                 >
                                                     <button
                                                         onClick={() => handleAspectRatioChange(ratio.value)}
-                                                        className={`flex-1 text-left text-xs font-semibold ${aspect === ratio.value ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}
+                                                        className="font-medium hover:underline"
                                                     >
-                                                        ★ {ratio.name}
+                                                        {ratio.name}
                                                     </button>
                                                     <button
                                                         onClick={() => deleteCustomAspect(index)}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                                        aria-label="Delete aspect preset"
+                                                        className="text-gray-400 hover:text-red-500"
                                                     >
-                                                        <X className="w-3.5 h-3.5" />
+                                                        <X className="w-3 h-3" />
                                                     </button>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
+                            </div>
 
-                                {/* Add Custom Aspect Form */}
-                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                                    <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                                        Add Custom Aspect
-                                    </h4>
+                            {/* Add Custom Ratio */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    Custom Ratio
+                                </span>
+                                <div className="flex gap-1.5 items-center">
+                                    <input
+                                        type="number"
+                                        placeholder="W"
+                                        value={newAspectW || ''}
+                                        onChange={(e) => setNewAspectW(Number(e.target.value))}
+                                        className="w-14 px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        min="1"
+                                    />
+                                    <span className="text-gray-400 text-xs font-bold">:</span>
+                                    <input
+                                        type="number"
+                                        placeholder="H"
+                                        value={newAspectH || ''}
+                                        onChange={(e) => setNewAspectH(Number(e.target.value))}
+                                        className="w-14 px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        min="1"
+                                    />
                                     <input
                                         type="text"
-                                        placeholder="Name (e.g. Card)"
+                                        placeholder="Name"
                                         value={newAspectName}
                                         onChange={(e) => setNewAspectName(e.target.value)}
-                                        className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
                                     />
-                                    <div className="flex gap-2 items-center">
-                                        <input
-                                            type="number"
-                                            placeholder="W (e.g. 4)"
-                                            value={newAspectW || ''}
-                                            onChange={(e) => setNewAspectW(Number(e.target.value))}
-                                            className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                            min="1"
-                                        />
-                                        <span className="text-gray-400 text-xs">:</span>
-                                        <input
-                                            type="number"
-                                            placeholder="H (e.g. 3)"
-                                            value={newAspectH || ''}
-                                            onChange={(e) => setNewAspectH(Number(e.target.value))}
-                                            className="w-full px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                            min="1"
-                                        />
-                                        <button
-                                            onClick={saveCustomAspect}
-                                            disabled={!newAspectName.trim() || !newAspectW || !newAspectH}
-                                            className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={saveCustomAspect}
+                                        disabled={!newAspectName.trim() || !newAspectW || !newAspectH}
+                                        className="p-1.5 rounded-lg bg-blue-600 text-white disabled:opacity-50"
+                                        title="Save ratio"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Format */}
-                            <div className="card">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            {/* Output Format */}
+                            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                     Output Format
-                                </h3>
-                                <div className="grid grid-cols-3 gap-2">
+                                </span>
+                                <div className="grid grid-cols-3 gap-1.5">
                                     {FORMATS.map((fmt) => (
                                         <button
                                             key={fmt.value}
                                             onClick={() => handleFormatChange(fmt.value)}
-                                            className={`py-2 px-4 rounded-lg font-medium transition-all ${format === fmt.value
-                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                }`}
+                                            className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                                                format === fmt.value
+                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                            }`}
                                         >
                                             {fmt.label}
                                         </button>
@@ -462,29 +412,37 @@ export default function CropTool({ defaultFormat = 'png', title }: CropToolProps
                                 </div>
                             </div>
 
-                            {/* Download */}
+                            {/* Action Button */}
                             <button
                                 onClick={handleDownload}
-                                disabled={isProcessing || !completedCrop}
-                                className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isProcessing || !completedCrop || !originalFile}
+                                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                             >
                                 {isProcessing ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                        Processing...
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Cropping...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Download className="w-5 h-5 mr-2" />
-                                        Crop & Download
+                                        <Download className="w-4 h-4" />
+                                        <span>Crop & Download</span>
                                     </>
                                 )}
                             </button>
-
-
                         </div>
-                    )}
+                    </div>
                 </div>
+
+                {/* Related Tools Horizontal Pill Bar */}
+                <ToolRecommendations currentTool="crop" />
+
+                {/* In-Content Ad Placement */}
+                {contentAdSlot && (
+                    <div className="pt-2">
+                        <AdBanner dataAdSlot={contentAdSlot} dataAdFormat="horizontal" />
+                    </div>
+                )}
             </div>
         </div>
     );

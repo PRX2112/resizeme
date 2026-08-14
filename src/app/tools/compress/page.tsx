@@ -154,8 +154,6 @@ export default function CompressPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="compress" />
         </>
     );
 }

@@ -152,8 +152,6 @@ export default function ConvertPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="convert" />
         </>
     );
 }

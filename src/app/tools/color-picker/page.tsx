@@ -152,8 +152,6 @@ export default function ColorPickerPage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="color-picker" />
         </>
     );
 }

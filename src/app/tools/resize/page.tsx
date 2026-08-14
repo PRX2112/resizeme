@@ -156,8 +156,6 @@ export default function ResizePage() {
                     },
                 ]}
             />
-
-            <ToolRecommendations currentTool="resize" />
         </>
     );
 }
