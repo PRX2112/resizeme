@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Image Format Guide: WebP vs PNG vs JPG vs SVG | ResizeMe',
     description: 'Learn the difference between JPEG, PNG, WebP, SVG, and AVIF. Find out exactly which media format you should use for your website, social media, or graphic design.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ImageFormatGuide() {

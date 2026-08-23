@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'How to Compress Images Without Losing Quality | ResizeMe',
     description: 'Learn the secrets of lossless and lossy image compression. Discover how to reduce image file sizes by over 80% while retaining perfect visual quality for the human eye.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressImagesWithoutLosingQuality() {

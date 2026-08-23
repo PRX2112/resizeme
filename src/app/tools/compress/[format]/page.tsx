@@ -39,7 +39,11 @@ export async function generateMetadata({ params }: PageProps) {
         description: `Compress ${displayFormat} images online up to 80% without quality loss. Optimize your ${displayFormat} files for web and speed.`,
         alternates: {
             canonical: `/compress-${format}`
-        }
+        },
+        robots: {
+            index: false,
+            follow: true,
+        },
     };
 }
 

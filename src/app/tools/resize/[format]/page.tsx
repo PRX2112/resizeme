@@ -41,7 +41,11 @@ export async function generateMetadata({ params }: PageProps) {
         description: `Best tool to resize ${displayFormat} images online. Change dimensions of your ${displayFormat} files without losing quality. No sign-up required.`,
         alternates: {
             canonical: `/resize-${format}`
-        }
+        },
+        robots: {
+            index: false,
+            follow: true,
+        },
     };
 }
 

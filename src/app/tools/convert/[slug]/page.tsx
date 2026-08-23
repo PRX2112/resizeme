@@ -70,7 +70,11 @@ export async function generateMetadata({ params }: PageProps) {
         description: desc,
         alternates: {
             canonical: `/convert-${slug}`
-        }
+        },
+        robots: {
+            index: false,
+            follow: true,
+        },
     };
 }
 

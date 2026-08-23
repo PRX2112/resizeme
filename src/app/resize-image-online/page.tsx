@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     keywords: ['resize image online', 'resize image', 'image resizer', 'resize photo', 'resize picture online free', 'change image size'],
     alternates: {
         canonical: '/resize-image-online'
-    }
+    },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeImageOnlinePage() {

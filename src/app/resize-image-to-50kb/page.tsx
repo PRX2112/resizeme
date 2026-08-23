@@ -5,7 +5,11 @@ import JsonLd from '@/components/JsonLd';
 export const metadata: Metadata = {
     title: 'Resize Image to 50KB Online - Free Image Compressor',
     description: 'Reduce and resize image files to under 50KB online for free. Works with JPG, PNG, and WebP formats. Safe on-device processing, instant download.',
-    alternates: { canonical: '/resize-image-to-50kb' }
+    alternates: { canonical: '/resize-image-to-50kb' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeTo50KBPage() {

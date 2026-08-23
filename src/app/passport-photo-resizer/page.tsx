@@ -5,7 +5,11 @@ import JsonLd from '@/components/JsonLd';
 export const metadata: Metadata = {
     title: 'Passport Photo Resizer & Cropper - Free Online Tool',
     description: 'Crop and resize your portrait photos to official government passport and visa photo size requirements online for free. 100% browser-based security.',
-    alternates: { canonical: '/passport-photo-resizer' }
+    alternates: { canonical: '/passport-photo-resizer' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function PassportPhotoResizerPage() {

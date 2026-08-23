@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     keywords: ['crop image', 'crop image online', 'trim photo', 'cut image', 'crop photo online free', 'image cropper'],
     alternates: {
         canonical: '/crop-image-online'
-    }
+    },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CropImageOnlinePage() {

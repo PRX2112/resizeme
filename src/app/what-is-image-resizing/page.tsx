@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'What is Image Resizing? The Complete Guide | ResizeMe',
     description: 'Learn exactly what image resizing is, how it differs from cropping, why it matters for SEO and performance, and the best practices for resizing images online.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function WhatIsImageResizing() {

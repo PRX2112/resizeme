@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Compress Image to 50KB Online – Free, Instant',
     description: 'Reduce any image to under 50KB online for free. Works with JPG, PNG, and WebP. No signup required, instant download.',
-    alternates: { canonical: '/compress-image-to-50kb' }
+    alternates: { canonical: '/compress-image-to-50kb' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressTo50KBPage() {

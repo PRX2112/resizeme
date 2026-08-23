@@ -5,7 +5,11 @@ import JsonLd from '@/components/JsonLd';
 export const metadata: Metadata = {
     title: 'Instagram Story Image Resizer - Crop to 9:16 Ratio',
     description: 'Resize and crop your photos for Instagram Stories online for free. Convert to the perfect 1080x1920 px and 9:16 aspect ratio with absolute privacy.',
-    alternates: { canonical: '/instagram-story-resize' }
+    alternates: { canonical: '/instagram-story-resize' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function InstagramStoryResizePage() {

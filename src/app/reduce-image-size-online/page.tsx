@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Reduce Image Size Online – Free Photo Compressor',
     description: 'Reduce image file size online for free. Compress JPG, PNG, and WebP images without quality loss. No signup, instant download.',
-    alternates: { canonical: '/reduce-image-size-online' }
+    alternates: { canonical: '/reduce-image-size-online' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ReduceImageSizePage() {

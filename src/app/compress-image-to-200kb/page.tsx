@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Compress Image to 200KB – Free Online Compressor',
     description: 'Reduce your image file size to 200KB or less online for free. Works for JPG, PNG, WebP. Instant, no signup needed.',
-    alternates: { canonical: '/compress-image-to-200kb' }
+    alternates: { canonical: '/compress-image-to-200kb' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressTo200KBPage() {

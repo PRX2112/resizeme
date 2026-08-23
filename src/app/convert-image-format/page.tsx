@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     keywords: ['convert image', 'image converter', 'convert jpg to png', 'convert png to jpg', 'convert to webp', 'change image format'],
     alternates: {
         canonical: '/convert-image-format'
-    }
+    },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ConvertImageFormatPage() {

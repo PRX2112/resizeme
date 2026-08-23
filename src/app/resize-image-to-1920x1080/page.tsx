@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Resize Image to 1920x1080 (Full HD) – Free Online',
     description: 'Resize any image to 1920x1080 pixels (1080p Full HD) for free. Perfect for wallpapers, video thumbnails, and presentations.',
-    alternates: { canonical: '/resize-image-to-1920x1080' }
+    alternates: { canonical: '/resize-image-to-1920x1080' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeTo1920x1080Page() {

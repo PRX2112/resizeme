@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'PNG to JPG Converter – Free Online',
     description: 'Convert PNG images to JPG format online for free. Reduce file size, remove transparency, download instantly. No signup.',
-    alternates: { canonical: '/png-to-jpg' }
+    alternates: { canonical: '/png-to-jpg' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function PNGToJPGPage() {

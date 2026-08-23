@@ -1,9 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Definitive Social Media Image Size Guide 2026 | ResizeMe',
     description: 'The complete, updated guide to image sizes and dimensions for Instagram, Facebook, Twitter (X), LinkedIn, and YouTube. Never upload a blurry image again.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function SocialMediaImageSizes() {

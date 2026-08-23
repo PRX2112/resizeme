@@ -5,7 +5,11 @@ import JsonLd from '@/components/JsonLd';
 export const metadata: Metadata = {
     title: 'YouTube Thumbnail Image Compressor - Compress Under 2MB',
     description: 'Compress and optimize your YouTube thumbnails online for free. Keep dimensions at 1280x720 and shrink file sizes under YouTube\'s strict 2MB limit.',
-    alternates: { canonical: '/youtube-thumbnail-compressor' }
+    alternates: { canonical: '/youtube-thumbnail-compressor' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function YouTubeThumbnailCompressorPage() {

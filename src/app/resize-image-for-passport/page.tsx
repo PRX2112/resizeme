@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Passport Photo Size Online – Resize Photo Free',
     description: 'Resize your photo to passport size (35x45mm or 2x2 inch) online for free. Works for Indian passport, US passport, visa photos and more.',
-    alternates: { canonical: '/resize-image-for-passport' }
+    alternates: { canonical: '/resize-image-for-passport' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 const passportSizes = [

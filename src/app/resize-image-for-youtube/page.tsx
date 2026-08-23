@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'YouTube Thumbnail Size – Resize Image to 1280x720',
     description: 'Resize your image to the perfect YouTube thumbnail size: 1280x720 pixels (16:9). Free online tool, no signup required.',
-    alternates: { canonical: '/resize-image-for-youtube' }
+    alternates: { canonical: '/resize-image-for-youtube' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeForYoutubePage() {

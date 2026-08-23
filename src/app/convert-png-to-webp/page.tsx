@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'PNG to WebP Converter – Free Online Tool',
     description: 'Convert PNG images to WebP format for smaller file sizes and faster web performance. Free, instant, browser-based.',
-    alternates: { canonical: '/convert-png-to-webp' }
+    alternates: { canonical: '/convert-png-to-webp' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function PNGToWebPPage() {

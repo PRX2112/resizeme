@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Resize Image for Instagram – Free Online Tool',
     description: 'Resize photos to perfect Instagram dimensions: 1080x1080 (square), 1080x1350 (portrait), 1080x608 (landscape) and more. Free and instant.',
-    alternates: { canonical: '/resize-image-for-instagram' }
+    alternates: { canonical: '/resize-image-for-instagram' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 const sizes = [

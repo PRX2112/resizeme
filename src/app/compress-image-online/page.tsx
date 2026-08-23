@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     keywords: ['compress image', 'compress image online', 'reduce image size', 'image compression', 'optimize image', 'reduce file size'],
     alternates: {
         canonical: '/compress-image-online'
-    }
+    },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressImageOnlinePage() {

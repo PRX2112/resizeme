@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Resize Image to 100KB Online - Free Image Compressor',
     description: 'Reduce your image file size to 100KB online for free. No signup needed. Works with JPG, PNG, WebP. Download instantly.',
-    alternates: { canonical: '/resize-image-to-100kb' }
+    alternates: { canonical: '/resize-image-to-100kb' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeTo100KBPage() {

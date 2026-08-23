@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Resize Image for WhatsApp DP – Free Photo Resizer',
     description: 'Resize your photo to the perfect WhatsApp display picture (DP) size: 500x500 pixels. Free, fast, and private.',
-    alternates: { canonical: '/resize-image-for-whatsapp' }
+    alternates: { canonical: '/resize-image-for-whatsapp' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function ResizeForWhatsappPage() {

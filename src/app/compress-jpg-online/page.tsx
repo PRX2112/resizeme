@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Compress JPG Online – Reduce JPEG Size for Free',
     description: 'Compress JPG images online for free. Reduce JPEG file size by up to 90% without visible quality loss. No signup, instant download.',
-    alternates: { canonical: '/compress-jpg-online' }
+    alternates: { canonical: '/compress-jpg-online' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressJPGPage() {

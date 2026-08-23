@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Why Image Optimization Matters: SEO & Performance | ResizeMe',
     description: 'Discover why optimizing your images is critical for SEO, Core Web Vitals, website performance, and user experience. Learn the real-world impact of image optimization.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function WhyImageOptimizationMatters() {

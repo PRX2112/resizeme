@@ -4,7 +4,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Compress PNG Online – Reduce PNG File Size Free',
     description: 'Compress PNG images online for free. Reduce PNG file size without losing transparency or quality. Instant, private, no signup.',
-    alternates: { canonical: '/compress-png-online' }
+    alternates: { canonical: '/compress-png-online' },
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function CompressPNGPage() {
